@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import Hero from './Hero.astro';
 import Section from './Section.astro';
 import PipelineSvg from './PipelineSvg.astro';
+import { reference } from '../data/pipeline';
 import Projects from './Projects.astro';
 import Contact from './Contact.astro';
 import { type Lang, useTranslations, routes, otherLang } from '../i18n/ui';
@@ -28,7 +29,7 @@ const teaserId = lang === 'es' ? 'como-trabajo' : 'how-i-work';
         <a class="btn btn-primary" href={r.pipeline}>{t('home.pipeline.cta')} →</a>
       </div>
       <a class="preview card" href={r.pipeline} data-reveal style="--i: 1" aria-label={t('home.pipeline.cta')}>
-        <PipelineSvg lang={lang} interactive={false} idPrefix="teaser" label={t('pipeline.svgLabel')} />
+        <PipelineSvg arch={reference} lang={lang} interactive={false} idPrefix="teaser" label={t('pipeline.svgLabel')} />
         <span class="badge">▶ {t('home.pipeline.badge')}</span>
       </a>
     </div>

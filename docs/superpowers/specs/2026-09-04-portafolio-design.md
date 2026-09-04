@@ -25,6 +25,10 @@ Tras ver la primera versión, Francisco pidió dos cambios que sustituyen la por
 
 El diagrama gana botones de escenario ("¿y si falla la orquestación?") y un recorrido guiado automático, y sus flechas llevan puntos de datos en movimiento que se apagan o cambian de color según el estado. La paleta pasó a la de Claude sobre fondo blanco, sin modo oscuro.
 
+**Segunda revisión del diagrama.** Francisco lo vio simple y sin explicaciones. Ahora hay dos arquitecturas conmutables en la página "Cómo trabajo": la de **referencia** (agnóstica, la de siempre, también usada como anticipo en la portada) y una de **Google Cloud** con 28 piezas en seis columnas y cinco barras transversales: Cloud SQL, SaaS, eventos y ficheros; Datastream, Cloud Functions, Pub/Sub y Cloud Run Jobs; Cloud Storage, Dataflow batch y streaming, Dataproc Serverless; BigQuery bronze, enriquecimiento NLP con Vertex AI y Firestore; silver, aserciones, gold y features con Dataform y BigQuery ML; Looker Studio, Vertex AI, Connected Sheets y una API en Cloud Run; Composer, Dataplex, IAM y Secret Manager, Terraform con Cloud Build, y Logging, Monitoring y Billing. Cada arquitectura vive en su propio archivo de datos (`src/data/pipeline-gcp.ts`, `src/data/pipeline-reference.ts`) con el tipo común en `pipeline-types.ts`.
+
+Explicaciones visibles sin pulsar: columnas numeradas, etiquetas en las flechas con el formato o la condición, panel inicial "cómo leer el diagrama", "el recorrido de un dato" paso a paso con botón que ilumina cada pieza, y una ficha por capa con qué es, por qué existe, servicios y dónde lo ha hecho. El panel lateral solo va al lado en pantallas de 1400 px o más; por debajo se coloca bajo el diagrama y se acerca solo al seleccionar.
+
 La sección siguiente describe la portada única original y se conserva como historial.
 
 ## Estructura (versión inicial, sustituida)

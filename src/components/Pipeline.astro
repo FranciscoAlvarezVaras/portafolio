@@ -1,19 +1,20 @@
 ---
-import { nodes, edges } from '../data/pipeline';
+import type { Architecture } from '../data/pipeline-types';
 import { type Lang, useTranslations, projectUrl } from '../i18n/ui';
 import PipelineSvg from './PipelineSvg.astro';
 
 interface Props {
+  arch: Architecture;
   lang: Lang;
 }
-const { lang } = Astro.props;
+const { arch, lang } = Astro.props;
 const t = useTranslations(lang);
-
-const scenarios = ['orchestration', 'quality', 'silver', 'iac'] as const;
+const idPrefix = `full-${arch.id}`;
+const minWidth = Math.round(arch.canvas.width * 0.78);
 
 /* Datos para el cliente: solo el idioma actual. */
 const clientData = {
-  nodes: nodes.map((n) => ({
+  nodes: arch.nodes.map((n) => ({
     id: n.id,
     layer: n.layer,
     label: n.label[lang],
@@ -25,7 +26,8 @@ const clientData = {
     controls: n.controls ?? [],
     evidence: n.evidence.map((e) => ({ url: projectUrl(lang, e.project), title: e.title[lang], note: e.note[lang] })),
   })),
-  edges,
+  edges: arch.edges.map((e) => ({ from: e.from, to: e.to })),
+  tourOrder: arch.nodes.map((n) => n.id),
   ui: {
     remove: t('pipeline.remove'),
     restore: t('pipeline.restore'),
@@ -35,8 +37,6 @@ const clientData = {
     whatBreaks: t('pipeline.whatBreaks'),
     affected: t('pipeline.affected'),
     removedCount: t('pipeline.removedCount'),
-    healthy: t('pipeline.healthy'),
-    hint: t('pipeline.hint'),
     tour: t('pipeline.tour'),
     tourStop: t('pipeline.tourStop'),
     status: {
@@ -50,12 +50,12 @@ const clientData = {
 };
 ---
 
-<div class="pipeline" data-pipeline>
+<div class="pipeline" data-pipeline data-arch={arch.id}>
   <div class="scenarios" role="group" aria-label={t('pipeline.scenarios')}>
     <span class="label">{t('pipeline.scenarios')}</span>
-    {scenarios.map((s) => (
-      <button type="button" class="chip-btn" data-scenario={s}>
-        {t(`pipeline.scenario.${s}` as const)}
+    {arch.scenarios.map((s) => (
+      <button type="button" class="chip-btn" data-scenario={s.node}>
+        {s.label[lang]}
       </button>
     ))}
     <button type="button" class="chip-btn tour" data-tour>
@@ -64,13 +64,18 @@ const clientData = {
     </button>
   </div>
 
-  <div class="diagram-wrap">
-    <PipelineSvg lang={lang} interactive={true} idPrefix="full" label={t('pipeline.svgLabel')} />
+  <div class="diagram-wrap" style={`--min: ${minWidth}px`}>
+    <PipelineSvg arch={arch} lang={lang} interactive={true} idPrefix={idPrefix} label={t('pipeline.svgLabel')} />
   </div>
 
   <aside class="panel card" data-panel aria-live="polite">
+    <p class="panel-label">{t('pipeline.howto.title')}</p>
+    <ol class="howto">
+      <li>{t('pipeline.howto.1')}</li>
+      <li>{t('pipeline.howto.2')}</li>
+      <li>{t('pipeline.howto.3')}</li>
+    </ol>
     <p class="panel-hint">{t('pipeline.hint')}</p>
-    <p class="panel-healthy">{t('pipeline.healthy')}</p>
     <noscript><p class="panel-hint">{t('pipeline.noscript')}</p></noscript>
   </aside>
 
@@ -81,6 +86,47 @@ const clientData = {
     <li><span class="sw sw-dirty"></span>{t('pipeline.legend.dirty')}</li>
     <li><span class="sw sw-risk"></span>{t('pipeline.legend.risk')}</li>
   </ul>
+
+  <section class="story">
+    <h3>{t('pipeline.story.title')}</h3>
+    <p class="lead small">{t('pipeline.story.intro')}</p>
+    <ol class="steps">
+      {arch.story.map((s, i) => (
+        <li class="step card">
+          <span class="num">{i + 1}</span>
+          <div>
+            <strong>{s.title[lang]}</strong>
+            <p>{s.text[lang]}</p>
+            <button type="button" class="link-btn" data-select={s.node}>{t('pipeline.story.cta')} →</button>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="layers">
+    <h3>{t('pipeline.layers.title')}</h3>
+    <p class="lead small">{t('pipeline.layers.intro')}</p>
+    <div class="layer-grid">
+      {arch.layers.map((l) => (
+        <article class={`layer card layer-${l.key}`}>
+          <h4>{l.title[lang]}</h4>
+          <dl>
+            <dt>{t('pipeline.layers.what')}</dt>
+            <dd>{l.what[lang]}</dd>
+            <dt>{t('pipeline.layers.why')}</dt>
+            <dd>{l.why[lang]}</dd>
+            <dt>{t('pipeline.layers.services')}</dt>
+            <dd class="chips">
+              {l.services.map((s) => <span class="chip">{s}</span>)}
+            </dd>
+            <dt>{t('pipeline.layers.mine')}</dt>
+            <dd class="mine">{l.mine[lang]}</dd>
+          </dl>
+        </article>
+      ))}
+    </div>
+  </section>
 
   <script type="application/json" data-pipeline-data set:html={JSON.stringify(clientData)} />
 </div>
@@ -103,31 +149,19 @@ const clientData = {
   interface Data {
     nodes: N[];
     edges: { from: string; to: string }[];
+    tourOrder: string[];
     ui: Record<string, any>;
   }
 
   const RANK: Record<Status, number> = { ok: 0, risk: 1, partial: 2, stale: 3, dirty: 4 };
   const EMIT: Record<Failure, Status> = { stops: 'stale', corrupts: 'dirty', partial: 'partial', latent: 'ok' };
-  const TOUR_ORDER = [
-    'src_db', 'src_api', 'src_events', 'src_files',
-    'ing_batch', 'ing_stream', 'lake',
-    'silver', 'quality', 'gold',
-    'dashboard', 'ml', 'api',
-    'orchestration', 'governance', 'iac', 'monitoring',
-  ];
-
-  let tourTimer: number | null = null;
-  function stopTourTimer() {
-    if (tourTimer !== null) {
-      window.clearInterval(tourTimer);
-      tourTimer = null;
-    }
-  }
 
   function init(root: HTMLElement) {
     const data: Data = JSON.parse(root.querySelector('[data-pipeline-data]')!.textContent || '{}');
     const byId = new Map(data.nodes.map((n) => [n.id, n]));
     const panel = root.querySelector<HTMLElement>('[data-panel]')!;
+    const initialPanel = Array.from(panel.childNodes).map((n) => n.cloneNode(true));
+    const diagramWrap = root.querySelector<HTMLElement>('.diagram-wrap')!;
     const nodeEls = new Map<string, SVGGElement>();
     root.querySelectorAll<SVGGElement>('.node').forEach((g) => nodeEls.set(g.dataset.id!, g));
     const edgeEls = Array.from(root.querySelectorAll<SVGPathElement>('.edge'));
@@ -138,6 +172,7 @@ const clientData = {
     const removed = new Set<string>();
     let selected: string | null = null;
     let touring = false;
+    let tourTimer: number | null = null;
 
     /* ---------- modelo ---------- */
     function compute(): Map<string, Status> {
@@ -233,9 +268,11 @@ const clientData = {
       }
 
       if (!selected) {
-        panel.append(h('p', { class: 'panel-hint' }, ui.hint));
-        panel.append(h('p', { class: 'panel-healthy' }, removed.size ? '' : ui.healthy));
-        if (removed.size) appendAffected(status);
+        if (!removed.size) {
+          panel.append(...initialPanel.map((n) => n.cloneNode(true)));
+          return;
+        }
+        appendAffected(status);
         return;
       }
 
@@ -304,23 +341,32 @@ const clientData = {
       panel.append(ul);
     }
 
+    /** En pantallas donde el panel va debajo, acércalo cuando quede fuera de vista. */
+    function ensurePanelVisible() {
+      const r = panel.getBoundingClientRect();
+      if (r.top > window.innerHeight * 0.85 || r.bottom < 0) panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+
     /* ---------- recorrido guiado ---------- */
     function stopTour() {
+      if (tourTimer !== null) {
+        window.clearInterval(tourTimer);
+        tourTimer = null;
+      }
       if (!touring) return;
       touring = false;
-      stopTourTimer();
       root.classList.remove('touring');
       if (tourLabel) tourLabel.textContent = data.ui.tour;
     }
     function startTour() {
-      stopTourTimer();
+      stopTour();
       touring = true;
       root.classList.add('touring');
       if (tourLabel) tourLabel.textContent = data.ui.tourStop;
       removed.clear();
       let i = 0;
       const step = () => {
-        selected = TOUR_ORDER[i % TOUR_ORDER.length];
+        selected = data.tourOrder[i % data.tourOrder.length];
         i += 1;
         render();
       };
@@ -334,6 +380,7 @@ const clientData = {
         stopTour();
         selected = selected === id ? null : id;
         render();
+        if (selected) ensurePanelVisible();
       };
       g.addEventListener('click', pick);
       g.addEventListener('keydown', (e) => {
@@ -352,11 +399,24 @@ const clientData = {
         removed.add(id);
         selected = id;
         render();
-        if (window.innerWidth < 1180) panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        ensurePanelVisible();
+      });
+    });
+
+    root.querySelectorAll<HTMLButtonElement>('[data-select]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        stopTour();
+        selected = btn.dataset.select!;
+        render();
+        diagramWrap.scrollIntoView({ block: 'start', behavior: 'smooth' });
+        const g = nodeEls.get(selected);
+        if (g) diagramWrap.scrollTo({ left: Math.max(0, (g.getBoundingClientRect().left - diagramWrap.getBoundingClientRect().left) + diagramWrap.scrollLeft - 40), behavior: 'smooth' });
       });
     });
 
     tourBtn?.addEventListener('click', () => (touring ? stopTour() : startTour()));
+    document.addEventListener('pipeline:stopall', stopTour);
+    document.addEventListener('astro:before-swap', stopTour);
 
     render();
   }
@@ -368,14 +428,13 @@ const clientData = {
     });
   }
   document.addEventListener('astro:page-load', boot);
-  document.addEventListener('astro:before-swap', stopTourTimer);
   boot();
 </script>
 
 <style>
   .pipeline {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 330px;
+    grid-template-columns: minmax(0, 1fr) 340px;
     gap: 1.25rem;
     align-items: start;
   }
@@ -438,7 +497,7 @@ const clientData = {
     box-shadow: var(--shadow);
   }
   .diagram-wrap :global(.diagram) {
-    min-width: 760px;
+    min-width: var(--min, 760px);
   }
 
   /* panel */
@@ -449,15 +508,18 @@ const clientData = {
     top: 80px;
     font-size: 0.93rem;
   }
+  .panel :global(.howto) {
+    margin: 0 0 0.9rem;
+    padding-left: 1.2rem;
+    color: var(--text);
+    display: grid;
+    gap: 0.45rem;
+  }
   .panel :global(.panel-hint) {
     font-family: var(--mono);
     font-size: 0.75rem;
     color: var(--faint);
     margin-bottom: 0.5rem;
-  }
-  .panel :global(.panel-healthy) {
-    color: var(--muted);
-    margin: 0;
   }
   .panel :global(.panel-bar) {
     display: flex;
@@ -498,6 +560,9 @@ const clientData = {
     text-transform: uppercase;
     color: var(--faint);
     margin: 0.9rem 0 0.35rem;
+  }
+  .panel :global(.panel-label:first-child) {
+    margin-top: 0;
   }
   .panel :global(.evidence) {
     list-style: none;
@@ -613,7 +678,124 @@ const clientData = {
     border-style: dotted;
   }
 
-  @media (max-width: 1180px) {
+  /* recorrido de un dato y capas */
+  .story,
+  .layers {
+    grid-column: 1 / -1;
+    margin-top: 2.5rem;
+  }
+  .story h3,
+  .layers h3 {
+    font-size: 1.45rem;
+    margin-bottom: 0.35rem;
+  }
+  .small {
+    font-size: 0.98rem;
+    margin-bottom: 1.25rem;
+  }
+  .steps {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 0.9rem;
+    counter-reset: step;
+  }
+  .step {
+    display: grid;
+    grid-template-columns: 2.2rem 1fr;
+    gap: 0.75rem;
+    padding: 1rem 1.1rem;
+    box-shadow: none;
+  }
+  .num {
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 50%;
+    background: var(--ink);
+    color: #faf9f5;
+    font-family: var(--mono);
+    font-weight: 600;
+    display: grid;
+    place-items: center;
+    font-size: 0.9rem;
+  }
+  .step strong {
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+  .step p {
+    margin: 0 0 0.5rem;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+  .link-btn {
+    font: inherit;
+    font-size: 0.86rem;
+    font-weight: 600;
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--accent-text);
+    cursor: pointer;
+  }
+  .link-btn:hover {
+    text-decoration: underline;
+  }
+  .layer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+  }
+  .layer {
+    padding: 1.1rem 1.25rem 1.25rem;
+    box-shadow: none;
+    border-top: 4px solid var(--ink);
+  }
+  .layer-ingest,
+  .layer-process {
+    border-top-color: var(--blue);
+  }
+  .layer-storage {
+    border-top-color: var(--border-strong);
+  }
+  .layer-transform {
+    border-top-color: var(--green);
+  }
+  .layer-consume {
+    border-top-color: var(--accent);
+  }
+  .layer-cross {
+    border-top-color: var(--faint);
+  }
+  .layer h4 {
+    font-size: 1.05rem;
+    margin-bottom: 0.75rem;
+  }
+  .layer dl {
+    margin: 0;
+    display: grid;
+    gap: 0.2rem;
+  }
+  .layer dt {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-top: 0.55rem;
+  }
+  .layer dd {
+    margin: 0;
+    font-size: 0.92rem;
+    color: var(--text);
+  }
+  .layer dd.mine {
+    color: var(--muted);
+  }
+
+  @media (max-width: 1400px) {
     .pipeline {
       grid-template-columns: 1fr;
     }

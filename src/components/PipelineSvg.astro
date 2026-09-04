@@ -1,26 +1,29 @@
 ---
 /**
- * Dibujo SVG del pipeline. Sin lógica: la interactividad la añade Pipeline.astro.
+ * Dibujo SVG de una arquitectura. Sin lógica: la interactividad la añade Pipeline.astro.
  * Con `interactive={false}` se usa como anticipo animado en la portada.
  */
-import { nodes, edges, canvas, layerNames, columnsX, type PipelineNode, type Layer } from '../data/pipeline';
+import type { Architecture, PipelineNode } from '../data/pipeline-types';
 import type { Lang } from '../i18n/ui';
 
 interface Props {
+  arch: Architecture;
   lang: Lang;
   interactive?: boolean;
   /** Prefijo para los ids internos del SVG (deben ser únicos por página). */
   idPrefix?: string;
   label: string;
 }
-const { lang, interactive = true, idPrefix = 'p', label } = Astro.props;
+const { arch, lang, interactive = true, idPrefix = arch.id, label } = Astro.props;
 
-const byId = new Map(nodes.map((n) => [n.id, n]));
+const byId = new Map(arch.nodes.map((n) => [n.id, n]));
 
 /** Curva entre columnas, o línea vertical si ambas piezas están en la misma columna. */
 function edgePath(a: PipelineNode, b: PipelineNode) {
   if (Math.abs(a.x - b.x) < 1) {
-    return `M${a.x + a.w / 2},${a.y + a.h} L${b.x + b.w / 2},${b.y}`;
+    return b.y > a.y
+      ? `M${a.x + a.w / 2},${a.y + a.h} L${b.x + b.w / 2},${b.y}`
+      : `M${a.x + a.w / 2},${a.y} L${b.x + b.w / 2},${b.y + b.h}`;
   }
   const x1 = a.x + a.w;
   const y1 = a.y + a.h / 2;
@@ -30,14 +33,13 @@ function edgePath(a: PipelineNode, b: PipelineNode) {
   return `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
 }
 
-const columnLayers: Layer[] = ['sources', 'ingest', 'storage', 'transform', 'consume'];
-const columns = columnLayers.map((layer, i) => ({ layer, x: columnsX[i] }));
 const edgeId = (from: string, to: string) => `${idPrefix}-e-${from}-${to}`;
+const labelY = Math.min(...arch.nodes.filter((n) => n.layer !== 'cross').map((n) => n.y)) - 14;
 ---
 
 <svg
   class={`diagram${interactive ? '' : ' static'}`}
-  viewBox={`0 0 ${canvas.width} ${canvas.height}`}
+  viewBox={`0 0 ${arch.canvas.width} ${arch.canvas.height}`}
   role={interactive ? 'group' : 'img'}
   aria-label={label}
 >
@@ -47,14 +49,15 @@ const edgeId = (from: string, to: string) => `${idPrefix}-e-${from}-${to}`;
     </marker>
   </defs>
 
-  {columns.map((c) => (
-    <text class="col-label" x={c.x} y={100}>
-      {layerNames[c.layer][lang]}
+  {arch.columns.map((c, i) => (
+    <text class="col-label" x={c.x} y={labelY}>
+      <tspan class="col-num">{i + 1}</tspan>
+      <tspan dx="6">{c.label[lang]}</tspan>
     </text>
   ))}
 
   <g class="edges">
-    {edges.map((e) => {
+    {arch.edges.map((e) => {
       const a = byId.get(e.from)!;
       const b = byId.get(e.to)!;
       return (
@@ -70,8 +73,20 @@ const edgeId = (from: string, to: string) => `${idPrefix}-e-${from}-${to}`;
     })}
   </g>
 
+  <g class="edge-labels" aria-hidden="true">
+    {arch.edges
+      .filter((e) => e.label)
+      .map((e) => (
+        <text class="edge-label" dy="-5">
+          <textPath href={`#${edgeId(e.from, e.to)}`} startOffset="50%" text-anchor="middle">
+            {e.label![lang]}
+          </textPath>
+        </text>
+      ))}
+  </g>
+
   <g class="flows" aria-hidden="true">
-    {edges.map((e, i) => (
+    {arch.edges.map((e, i) => (
       <circle class="flow" r="3.6" data-from={e.from} data-to={e.to}>
         <animateMotion dur={`${2.8 + (i % 4) * 0.35}s`} begin={`${-(i * 0.55)}s`} repeatCount="indefinite">
           <mpath href={`#${edgeId(e.from, e.to)}`} />
@@ -81,7 +96,7 @@ const edgeId = (from: string, to: string) => `${idPrefix}-e-${from}-${to}`;
   </g>
 
   <g class="nodes">
-    {nodes.map((n) => (
+    {arch.nodes.map((n) => (
       <g
         class={`node layer-${n.layer}${n.layer === 'cross' ? ' bar' : ''}`}
         data-id={n.id}
@@ -124,6 +139,10 @@ const edgeId = (from: string, to: string) => `${idPrefix}-e-${from}-${to}`;
     text-transform: uppercase;
     fill: var(--faint);
   }
+  .col-num {
+    fill: var(--accent-text);
+    font-weight: 600;
+  }
 
   /* aristas */
   .edge {
@@ -147,6 +166,15 @@ const edgeId = (from: string, to: string) => `${idPrefix}-e-${from}-${to}`;
   .edge-dirty {
     stroke: var(--accent);
     stroke-width: 2.2;
+  }
+  .edge-label {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    fill: var(--muted);
+    paint-order: stroke;
+    stroke: var(--surface);
+    stroke-width: 4px;
+    stroke-linejoin: round;
   }
 
   /* datos en movimiento */
@@ -203,7 +231,8 @@ const edgeId = (from: string, to: string) => `${idPrefix}-e-${from}-${to}`;
   .layer-sources .node-accent {
     fill: var(--ink);
   }
-  .layer-ingest .node-accent {
+  .layer-ingest .node-accent,
+  .layer-process .node-accent {
     fill: var(--blue);
   }
   .layer-storage .node-accent {
@@ -228,7 +257,7 @@ const edgeId = (from: string, to: string) => `${idPrefix}-e-${from}-${to}`;
     justify-content: center;
     gap: 2px;
     padding: 6px 10px 6px 14px;
-    line-height: 1.2;
+    line-height: 1.15;
     position: relative;
   }
   .bar .nd {
@@ -238,7 +267,7 @@ const edgeId = (from: string, to: string) => `${idPrefix}-e-${from}-${to}`;
     padding: 6px 12px;
   }
   .nd-label {
-    font-size: 13.5px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text);
   }

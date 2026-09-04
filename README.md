@@ -17,7 +17,8 @@ npm run preview    # sirve dist/ para comprobarlo
 |---|---|
 | Textos de la interfaz (titular, botones, secciones) en los dos idiomas | `src/i18n/ui.ts` |
 | Experiencia, stack, formación, hitos del máster, repos de práctica | `src/data/profile.ts` |
-| Piezas del diagrama end-to-end, sus textos y evidencias | `src/data/pipeline.ts` |
+| Diagrama de Google Cloud: piezas, flechas, capas, recorrido y escenarios | `src/data/pipeline-gcp.ts` |
+| Diagrama de referencia (agnóstico, también el anticipo de la portada) | `src/data/pipeline-reference.ts` |
 | Un proyecto (ficha completa) | `src/content/projects/es/<slug>.md` y `src/content/projects/en/<slug>.md` |
 | Añadir un proyecto nuevo | Copia una ficha existente en las dos carpetas con el mismo `<slug>`; `featured: true` lo saca a portada y `order` decide su posición |
 | Imágenes de proyectos | `public/img/projects/` |

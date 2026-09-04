@@ -1,0 +1,692 @@
+import { ev, type Architecture, type PipelineNode, type Edge, type Column } from './pipeline-types';
+
+/* Rejilla: seis columnas ---------------------------------------------- */
+const C = [24, 236, 448, 660, 872, 1084];
+const W = 176;
+const H = 64;
+
+const columns: Column[] = [
+  { key: 'sources', label: { es: 'Fuentes', en: 'Sources' }, x: C[0] },
+  { key: 'ingest', label: { es: 'Ingesta', en: 'Ingestion' }, x: C[1] },
+  { key: 'process', label: { es: 'Landing y procesamiento', en: 'Landing and processing' }, x: C[2] },
+  { key: 'storage', label: { es: 'Bronze y estado', en: 'Bronze and state' }, x: C[3] },
+  { key: 'transform', label: { es: 'Silver y gold · Dataform', en: 'Silver and gold · Dataform' }, x: C[4] },
+  { key: 'consume', label: { es: 'Consumo', en: 'Consumption' }, x: C[5] },
+];
+
+const nodes: PipelineNode[] = [
+  /* ---------- Fuentes ---------- */
+  {
+    id: 'g_cloudsql',
+    layer: 'sources',
+    label: { es: 'Bases operativas', en: 'Operational databases' },
+    tool: { es: 'Cloud SQL · AlloyDB', en: 'Cloud SQL · AlloyDB' },
+    tools: ['Cloud SQL', 'AlloyDB', 'PostgreSQL'],
+    desc: {
+      es: 'Las bases de datos que sostienen la operación: RRHH, reservas, ventas. No se consultan en masa para no cargarlas; se les captura el log de cambios.',
+      en: 'The databases that run the business: HR, bookings, sales. They are never bulk-queried, to avoid loading them; their change log is captured instead.',
+    },
+    ifRemoved: {
+      es: 'Sin las bases operativas no hay verdad de negocio. El resto de fuentes aporta contexto, pero nadie sabe quién trabaja aquí ni qué se vendió ayer.',
+      en: 'Without operational databases there is no business truth. Other sources add context, but nobody knows who works here or what sold yesterday.',
+    },
+    failure: 'partial',
+    evidence: [
+      ev.tfm({ es: 'Registros mensuales de RRHH de 130 empleados', en: 'Monthly HR records for 130 employees' }),
+      ev.hub({ es: 'Cloud SQL con 24 tablas como fuente de verdad del campus', en: 'Cloud SQL with 24 tables as the campus source of truth' }),
+    ],
+    x: C[0], y: 118, w: W, h: H,
+  },
+  {
+    id: 'g_saas',
+    layer: 'sources',
+    label: { es: 'SaaS y APIs', en: 'SaaS and APIs' },
+    tool: { es: 'Salesforce · Search Console · Eurostat', en: 'Salesforce · Search Console · Eurostat' },
+    tools: ['REST', 'OAuth', 'Cuotas', 'Paginación'],
+    desc: {
+      es: 'Datos de terceros con API: CRM, analítica web, estadísticas públicas, ofertas de empleo. Cada una con su cuota, su paginación y su manera de cambiar el formato sin avisar.',
+      en: 'Third-party data behind an API: CRM, web analytics, public statistics, job postings. Each with its own quota, pagination and habit of changing format without notice.',
+    },
+    ifRemoved: {
+      es: 'Se pierde el contexto externo: no puedes explicar si la rotación sube porque el mercado paga más o porque algo cambió dentro.',
+      en: 'External context is gone: you cannot tell whether churn rises because the market pays more or because something changed inside.',
+    },
+    failure: 'partial',
+    evidence: [
+      ev.tfm({ es: 'Eurostat y Adzuna para comparar salarios de mercado', en: 'Eurostat and Adzuna to benchmark market salaries' }),
+      ev.seo({ es: 'API de Search Console descargada a diario', en: 'Search Console API pulled daily' }),
+    ],
+    x: C[0], y: 208, w: W, h: H,
+  },
+  {
+    id: 'g_events',
+    layer: 'sources',
+    label: { es: 'Eventos de apps y dispositivos', en: 'App and device events' },
+    tool: { es: 'móvil · web · sensores', en: 'mobile · web · sensors' },
+    tools: ['SDK Pub/Sub', 'Webhooks', 'JSON'],
+    desc: {
+      es: 'Lo que pasa ahora mismo: una posición GPS, una lectura de un sensor, un clic. Miles por minuto, fuera de orden y a veces repetidos.',
+      en: 'What is happening right now: a GPS position, a sensor reading, a click. Thousands per minute, out of order and sometimes duplicated.',
+    },
+    ifRemoved: {
+      es: 'Se acaba el tiempo real. Todo lo que dependía de eventos pasa a ser una foto diaria y las alertas llegan tarde.',
+      en: 'Real time is over. Everything that depended on events becomes a daily snapshot and alerts arrive late.',
+    },
+    failure: 'partial',
+    evidence: [
+      ev.cloudrisk({ es: 'Pasos y GPS de cada jugador publicados en Pub/Sub', en: "Each player's steps and GPS published to Pub/Sub" }),
+      ev.air({ es: 'Lecturas de estaciones de calidad del aire', en: 'Air-quality station readings' }),
+    ],
+    x: C[0], y: 298, w: W, h: H,
+  },
+  {
+    id: 'g_files',
+    layer: 'sources',
+    label: { es: 'Ficheros de negocio', en: 'Business files' },
+    tool: { es: 'Excel · CSV · SFTP · Drive', en: 'Excel · CSV · SFTP · Drive' },
+    tools: ['SFTP', 'Google Drive', 'Excel', 'CSV'],
+    desc: {
+      es: 'El Excel de objetivos, el CSV que envía un proveedor cada lunes, el volcado de Slack. Se aceptan como fuente, pero se valida el esquema al entrar y se guarda copia inmutable.',
+      en: "The targets spreadsheet, the CSV a supplier sends every Monday, the Slack dump. Accepted as sources, but the schema is validated on arrival and an immutable copy is kept.",
+    },
+    ifRemoved: {
+      es: 'Desaparece el conocimiento informal: objetivos, precios de referencia, listas maestras. Las cifras siguen, pero sin contexto contra el que compararlas.',
+      en: 'Informal knowledge disappears: targets, reference prices, master lists. Figures keep flowing, but with nothing to compare them against.',
+    },
+    failure: 'partial',
+    evidence: [
+      ev.tfm({ es: 'Excel de RRHH y CSV de Slack como punto de partida', en: 'HR spreadsheet and Slack CSV as the starting point' }),
+      ev.prices({ es: 'CSV de precios de referencia mantenido a mano', en: 'Hand-maintained reference price CSV' }),
+    ],
+    x: C[0], y: 388, w: W, h: H,
+  },
+
+  /* ---------- Ingesta ---------- */
+  {
+    id: 'g_datastream',
+    layer: 'ingest',
+    label: { es: 'Datastream · CDC', en: 'Datastream · CDC' },
+    tool: { es: 'captura de cambios sin cargar el origen', en: 'change capture without loading the source' },
+    tools: ['Datastream', 'CDC', 'Avro', 'Cloud Storage'],
+    desc: {
+      es: 'Lee el log de transacciones de Cloud SQL y replica cada inserción, cambio y borrado en ficheros Avro en Cloud Storage, casi en tiempo real y sin lanzar consultas pesadas contra producción.',
+      en: 'Reads the Cloud SQL transaction log and replicates every insert, update and delete into Avro files in Cloud Storage, near real time and without heavy queries against production.',
+    },
+    ifRemoved: {
+      es: 'Las tablas de negocio dejan de llegar. El warehouse se congela en la última réplica y cada día que pasa el dashboard miente un poco más.',
+      en: 'Business tables stop arriving. The warehouse freezes at the last replica and every day the dashboard lies a little more.',
+    },
+    failure: 'stops',
+    evidence: [ev.tfm({ es: 'Ingesta de RRHH hacia BigQuery en el pipeline del TFM', en: 'HR ingestion into BigQuery in the thesis pipeline' })],
+    x: C[1], y: 118, w: W, h: H,
+  },
+  {
+    id: 'g_functions',
+    layer: 'ingest',
+    label: { es: 'Cloud Functions · extractores', en: 'Cloud Functions · extractors' },
+    tool: { es: 'API → JSON en Cloud Storage', en: 'API → JSON in Cloud Storage' },
+    tools: ['Cloud Functions', 'Python', 'Secret Manager', 'Reintentos'],
+    desc: {
+      es: 'Una función por API: se autentica con secretos de Secret Manager, pagina, reintenta con espera exponencial y guarda la respuesta cruda en Cloud Storage con la fecha en la ruta.',
+      en: 'One function per API: authenticates with secrets from Secret Manager, paginates, retries with exponential back-off and stores the raw response in Cloud Storage with the date in the path.',
+    },
+    ifRemoved: {
+      es: 'Las APIs siguen ahí, pero nadie las llama. Los datos de mercado y de tráfico se detienen en la última descarga.',
+      en: 'The APIs are still there, but nobody calls them. Market and traffic data stop at the last download.',
+    },
+    failure: 'stops',
+    evidence: [
+      ev.tfm({ es: 'Cargas de Eurostat y Adzuna con cliente propio', en: 'Eurostat and Adzuna loads with a custom client' }),
+      ev.seo({ es: 'Scripts diarios contra la API de Search Console', en: 'Daily scripts against the Search Console API' }),
+    ],
+    x: C[1], y: 208, w: W, h: H,
+  },
+  {
+    id: 'g_pubsub',
+    layer: 'ingest',
+    label: { es: 'Pub/Sub', en: 'Pub/Sub' },
+    tool: { es: 'topics · suscripciones · retención', en: 'topics · subscriptions · retention' },
+    tools: ['Pub/Sub', 'Dead-letter topic', 'Esquemas'],
+    desc: {
+      es: 'La cola que desacopla a quien produce de quien consume. Retiene los mensajes siete días, valida el esquema al publicar y manda a un topic de descartes lo que no se puede procesar.',
+      en: 'The queue that decouples producers from consumers. Retains messages for seven days, validates the schema on publish and sends unprocessable messages to a dead-letter topic.',
+    },
+    ifRemoved: {
+      es: 'Las apps no tienen dónde publicar. Los eventos se pierden en el momento en que ocurren, y con ellos el juego en vivo y las alertas.',
+      en: 'Apps have nowhere to publish. Events are lost the moment they happen, and with them live play and alerts.',
+    },
+    failure: 'stops',
+    evidence: [ev.cloudrisk({ es: 'Tres topics: movimientos, clima y calidad del aire', en: 'Three topics: movements, weather and air quality' })],
+    x: C[1], y: 298, w: W, h: H,
+  },
+  {
+    id: 'g_runjobs',
+    layer: 'ingest',
+    label: { es: 'Cloud Run Jobs · ficheros', en: 'Cloud Run Jobs · files' },
+    tool: { es: 'SFTP y Drive → Cloud Storage', en: 'SFTP and Drive → Cloud Storage' },
+    tools: ['Cloud Run Jobs', 'Cloud Scheduler', 'Docker'],
+    desc: {
+      es: 'Un contenedor que se ejecuta a una hora fija, recoge los ficheros del proveedor o de Drive, comprueba que el esquema es el esperado y los deja en la zona de aterrizaje.',
+      en: 'A container that runs at a fixed time, collects supplier or Drive files, checks the schema is the expected one and drops them in the landing zone.',
+    },
+    ifRemoved: {
+      es: 'Los ficheros de negocio se quedan en el correo y en Drive. Objetivos y referencias dejan de actualizarse en el warehouse.',
+      en: 'Business files stay in email and Drive. Targets and references stop updating in the warehouse.',
+    },
+    failure: 'stops',
+    evidence: [
+      ev.cloudrisk({ es: 'Walker como Cloud Run Job disparado por Scheduler', en: 'Walker as a Cloud Run Job triggered by Scheduler' }),
+      ev.prices({ es: 'CronJob diario de snapshots de catálogo', en: 'Daily catalogue snapshot CronJob' }),
+    ],
+    x: C[1], y: 388, w: W, h: H,
+  },
+
+  /* ---------- Landing y procesamiento ---------- */
+  {
+    id: 'g_dataproc',
+    layer: 'process',
+    label: { es: 'Dataproc Serverless · PySpark', en: 'Dataproc Serverless · PySpark' },
+    tool: { es: 'recargas históricas masivas', en: 'large historical backfills' },
+    tools: ['Dataproc Serverless', 'PySpark', 'Parquet'],
+    desc: {
+      es: 'Para los volúmenes que Dataflow batch no justifica: reprocesar años de histórico o cruzar decenas de ficheros grandes. Spark sin clúster que mantener, se paga solo mientras corre.',
+      en: 'For volumes Dataflow batch does not justify: reprocessing years of history or joining dozens of large files. Spark with no cluster to maintain, paid only while it runs.',
+    },
+    ifRemoved: {
+      es: 'El día a día sigue, pero un reproceso completo del histórico pasa de una hora a una semana de scripts a mano.',
+      en: 'Daily operations continue, but a full historical reprocess goes from an hour to a week of hand-run scripts.',
+    },
+    failure: 'partial',
+    evidence: [ev.tfm({ es: 'Módulo de PySpark del máster aplicado a cargas históricas', en: "PySpark module from the master's applied to historical loads" })],
+    x: C[2], y: 118, w: W, h: H,
+  },
+  {
+    id: 'g_gcs',
+    layer: 'process',
+    label: { es: 'Cloud Storage · landing', en: 'Cloud Storage · landing' },
+    tool: { es: 'crudo inmutable · particionado por fecha', en: 'immutable raw · partitioned by date' },
+    tools: ['Cloud Storage', 'Ciclo de vida', 'Versionado'],
+    desc: {
+      es: 'Todo aterriza aquí primero, tal cual llegó, en rutas con la fecha de carga. Nada se modifica ni se borra: una regla de ciclo de vida mueve lo antiguo a almacenamiento frío.',
+      en: 'Everything lands here first, exactly as it arrived, in paths carrying the load date. Nothing is modified or deleted: a lifecycle rule moves old data to cold storage.',
+    },
+    ifRemoved: {
+      es: 'La ingesta no tiene destino y el procesamiento no tiene origen. Y sin crudo guardado, cualquier error posterior es irreversible: no hay de dónde reconstruir.',
+      en: 'Ingestion has no destination and processing has no source. And without stored raw data, any later mistake is irreversible: there is nothing to rebuild from.',
+    },
+    failure: 'stops',
+    evidence: [ev.tfm({ es: 'Landing en Cloud Storage antes de BigQuery', en: 'Landing in Cloud Storage before BigQuery' })],
+    x: C[2], y: 208, w: W, h: H,
+  },
+  {
+    id: 'g_df_batch',
+    layer: 'process',
+    label: { es: 'Dataflow batch', en: 'Dataflow batch' },
+    tool: { es: 'Apache Beam · parseo y validación', en: 'Apache Beam · parsing and validation' },
+    tools: ['Dataflow', 'Apache Beam', 'Plantillas', 'Autoscaling'],
+    desc: {
+      es: 'Lee lo que aterrizó, parsea JSON y Avro, aplica el esquema esperado y escribe en BigQuery bronze. Los registros que no cumplen el esquema van a una tabla de rechazados con el motivo.',
+      en: 'Reads what landed, parses JSON and Avro, applies the expected schema and writes to BigQuery bronze. Records that fail the schema go to a rejects table with the reason.',
+    },
+    ifRemoved: {
+      es: 'Los ficheros se acumulan en landing sin que nadie los lea. BigQuery deja de recibir las cargas batch.',
+      en: 'Files pile up in landing with nobody reading them. BigQuery stops receiving batch loads.',
+    },
+    failure: 'stops',
+    evidence: [ev.cloudrisk({ es: 'Pipelines de Beam en local con DirectRunner y en Dataflow', en: 'Beam pipelines locally with DirectRunner and on Dataflow' })],
+    x: C[2], y: 298, w: W, h: H,
+  },
+  {
+    id: 'g_df_stream',
+    layer: 'process',
+    label: { es: 'Dataflow streaming', en: 'Dataflow streaming' },
+    tool: { es: 'Beam · ventanas · estado por clave', en: 'Beam · windows · keyed state' },
+    tools: ['Dataflow', 'Apache Beam', 'Ventanas', 'Estado y timers'],
+    desc: {
+      es: 'Consume Pub/Sub en continuo, agrupa por ventanas de tiempo, mantiene estado por jugador o por sensor y aplica reglas que no pueden esperar: antitrampas, topes diarios, alertas.',
+      en: 'Consumes Pub/Sub continuously, groups by time windows, keeps state per player or per sensor and applies rules that cannot wait: anti-cheat, daily caps, alerts.',
+    },
+    ifRemoved: {
+      es: 'Los eventos se acumulan en Pub/Sub y tras siete días se pierden. El estado en vivo y el histórico de eventos se apagan.',
+      en: 'Events pile up in Pub/Sub and are lost after seven days. Live state and event history go dark.',
+    },
+    failure: 'stops',
+    evidence: [ev.cloudrisk({ es: 'Pipeline stateful con radar de velocidad y límites diarios', en: 'Stateful pipeline with speed radar and daily caps' })],
+    x: C[2], y: 388, w: W, h: H,
+  },
+
+  /* ---------- Bronze y estado ---------- */
+  {
+    id: 'g_bronze',
+    layer: 'storage',
+    label: { es: 'BigQuery · bronze', en: 'BigQuery · bronze' },
+    tool: { es: 'tablas crudas particionadas y clusterizadas', en: 'raw tables partitioned and clustered' },
+    tools: ['BigQuery', 'Particiones', 'Clustering', 'Esquemas'],
+    desc: {
+      es: 'Primera copia consultable: una tabla por fuente, sin transformar, particionada por fecha de carga y clusterizada por la clave habitual. Es barata de consultar y fácil de reprocesar.',
+      en: 'First queryable copy: one table per source, untransformed, partitioned by load date and clustered by the usual key. Cheap to query and easy to reprocess.',
+    },
+    ifRemoved: {
+      es: 'No hay warehouse. Nada de lo que hay a la derecha tiene de dónde leer.',
+      en: 'There is no warehouse. Nothing to the right has anything to read from.',
+    },
+    failure: 'stops',
+    evidence: [ev.tfm({ es: 'Bronze con nombres normalizados y particiones', en: 'Bronze with normalised names and partitions' })],
+    x: C[3], y: 208, w: W, h: H,
+  },
+  {
+    id: 'g_enrich',
+    layer: 'storage',
+    label: { es: 'Enriquecimiento NLP', en: 'NLP enrichment' },
+    tool: { es: 'Cloud Run + Vertex AI · sentimiento y temas', en: 'Cloud Run + Vertex AI · sentiment and topics' },
+    tools: ['Cloud Run', 'Vertex AI', 'Gemini', 'Batch prediction'],
+    desc: {
+      es: 'Un servicio lee los textos de bronze, los manda a un modelo de lenguaje y devuelve sentimiento, temas y señales de riesgo como columnas nuevas para silver. Se procesa por lotes para controlar el coste.',
+      en: 'A service reads text from bronze, sends it to a language model and returns sentiment, topics and risk signals as new columns for silver. Processed in batches to control cost.',
+    },
+    ifRemoved: {
+      es: 'Los textos siguen ahí, pero nadie los lee. El modelo de rotación pierde la señal emocional y vuelve a depender solo de los números.',
+      en: 'Texts are still there, but nobody reads them. The churn model loses the emotional signal and depends on numbers alone again.',
+    },
+    failure: 'partial',
+    evidence: [ev.tfm({ es: 'Sentimiento y temas de Slack como variables del modelo', en: 'Slack sentiment and topics as model features' })],
+    x: C[3], y: 298, w: W, h: H,
+  },
+  {
+    id: 'g_firestore',
+    layer: 'storage',
+    label: { es: 'Firestore · estado en vivo', en: 'Firestore · live state' },
+    tool: { es: 'documentos reactivos para apps', en: 'reactive documents for apps' },
+    tools: ['Firestore', 'Escuchas en tiempo real', 'Índices'],
+    desc: {
+      es: 'Para lo que una app necesita leer ahora: el saldo de un jugador, el dueño de un barrio, el estado de una alerta. BigQuery guarda la historia; Firestore guarda el presente.',
+      en: 'For what an app needs to read right now: a player balance, who owns a district, an alert state. BigQuery keeps the history; Firestore keeps the present.',
+    },
+    ifRemoved: {
+      es: 'Las apps tendrían que consultar BigQuery en cada pantalla: lento y caro. El producto en vivo se degrada a informes.',
+      en: 'Apps would have to query BigQuery on every screen: slow and expensive. The live product degrades into reports.',
+    },
+    failure: 'stops',
+    evidence: [ev.cloudrisk({ es: 'Saldo de jugadores y estado del mapa en Firestore', en: 'Player balances and map state in Firestore' })],
+    x: C[3], y: 478, w: W, h: H,
+  },
+
+  /* ---------- Silver y gold ---------- */
+  {
+    id: 'g_silver',
+    layer: 'transform',
+    label: { es: 'BigQuery · silver', en: 'BigQuery · silver' },
+    tool: { es: 'Dataform · limpieza, tipos, claves, SCD', en: 'Dataform · cleaning, types, keys, SCD' },
+    tools: ['Dataform', 'SQLX', 'Incremental', 'SCD tipo 2'],
+    desc: {
+      es: 'Modelos SQL versionados en git: tipos correctos, deduplicación, claves consistentes y dimensiones con historia. Aquí se decide una sola vez qué significa "empleado activo".',
+      en: 'SQL models versioned in git: correct types, deduplication, consistent keys and dimensions with history. This is where "active employee" is defined exactly once.',
+    },
+    ifRemoved: {
+      es: 'Gold se construye sobre datos crudos: duplicados, nulos y fechas en tres formatos. Cada gráfico cuenta una versión distinta de la verdad.',
+      en: 'Gold is built on raw data: duplicates, nulls and dates in three formats. Every chart tells a different version of the truth.',
+    },
+    failure: 'corrupts',
+    evidence: [
+      ev.tfm({ es: 'Transformaciones Dataform de bronze a silver', en: 'Dataform transformations from bronze to silver' }),
+      ev.air({ es: 'Modelos dbt cada cinco minutos', en: 'dbt models every five minutes' }),
+    ],
+    x: C[4], y: 163, w: W, h: H,
+  },
+  {
+    id: 'g_assert',
+    layer: 'transform',
+    label: { es: 'Aserciones de calidad', en: 'Quality assertions' },
+    tool: { es: 'Dataform assertions · unicidad · nulos · rangos', en: 'Dataform assertions · uniqueness · nulls · ranges' },
+    tools: ['Dataform assertions', 'Row conditions', 'Alertas'],
+    desc: {
+      es: 'Cada tabla silver declara sus reglas: clave única, columnas obligatorias, rangos válidos, relaciones. Si una falla, la ejecución se detiene antes de tocar gold y salta una alerta.',
+      en: 'Every silver table declares its rules: unique key, mandatory columns, valid ranges, relationships. If one fails, the run stops before touching gold and an alert fires.',
+    },
+    ifRemoved: {
+      es: 'Los datos malos pasan en silencio: un salario en céntimos, un duplicado, una fecha del año 1900. Nadie lo ve hasta que un director pregunta por qué el KPI se ha disparado.',
+      en: 'Bad data passes silently: a salary in cents, a duplicate, a date from 1900. Nobody notices until a director asks why the KPI just exploded.',
+    },
+    failure: 'corrupts',
+    evidence: [ev.tfm({ es: 'Aserciones en Dataform y etiquetas de PII', en: 'Dataform assertions and PII tags' })],
+    x: C[4], y: 253, w: W, h: H,
+  },
+  {
+    id: 'g_gold',
+    layer: 'transform',
+    label: { es: 'BigQuery · gold · marts', en: 'BigQuery · gold · marts' },
+    tool: { es: 'hechos, dimensiones y KPIs con definición', en: 'facts, dimensions and KPIs with definitions' },
+    tools: ['Star schema', 'Vistas materializadas', 'Catálogo de KPIs'],
+    desc: {
+      es: 'Tablas pensadas para responder preguntas: hechos, dimensiones y métricas con dueño, fórmula y umbral escritos. Es la única capa que leen los consumidores.',
+      en: 'Tables designed to answer questions: facts, dimensions and metrics with written owner, formula and threshold. The only layer consumers read.',
+    },
+    ifRemoved: {
+      es: 'Cada analista calcula la rotación a su manera en su propia query. Tres reuniones, tres cifras. Dashboards, modelo y API se quedan sin tablas.',
+      en: 'Every analyst computes churn their own way in their own query. Three meetings, three numbers. Dashboards, model and API are left with no tables.',
+    },
+    failure: 'stops',
+    evidence: [ev.tfm({ es: 'Vistas gold y catálogo de KPIs de retención', en: 'Gold views and retention KPI catalogue' })],
+    x: C[4], y: 343, w: W, h: H,
+  },
+  {
+    id: 'g_features',
+    layer: 'transform',
+    label: { es: 'BigQuery ML · features', en: 'BigQuery ML · features' },
+    tool: { es: 'tablas de variables · baseline en SQL', en: 'feature tables · SQL baseline' },
+    tools: ['BigQuery ML', 'Feature tables', 'Ventanas móviles'],
+    desc: {
+      es: 'Las variables del modelo se calculan en SQL sobre gold: medias móviles, tendencias, días desde el último ascenso. Un modelo baseline en BigQuery ML fija el listón antes de ir a Vertex.',
+      en: 'Model features are computed in SQL on top of gold: rolling averages, trends, days since last promotion. A baseline in BigQuery ML sets the bar before moving to Vertex.',
+    },
+    ifRemoved: {
+      es: 'El modelo tendría que calcular sus variables cada vez, de forma distinta en entrenamiento y en producción. Predicciones inconsistentes.',
+      en: 'The model would have to compute its features every time, differently in training and production. Inconsistent predictions.',
+    },
+    failure: 'stops',
+    evidence: [ev.tfm({ es: 'Variables de rotación a partir de 24 meses de historia', en: 'Churn features from 24 months of history' })],
+    x: C[4], y: 433, w: W, h: H,
+  },
+
+  /* ---------- Consumo ---------- */
+  {
+    id: 'g_looker',
+    layer: 'consume',
+    label: { es: 'Looker Studio', en: 'Looker Studio' },
+    tool: { es: 'dashboards con umbrales accionables', en: 'dashboards with actionable thresholds' },
+    tools: ['Looker Studio', 'Vistas gold', 'Filtros por manager'],
+    desc: {
+      es: 'El centro de mando: pocas métricas, bien definidas, con umbrales que dicen cuándo actuar y filtros por equipo. Conectado a vistas gold, nunca a tablas crudas.',
+      en: 'The command centre: few metrics, well defined, with thresholds that say when to act and filters per team. Connected to gold views, never to raw tables.',
+    },
+    ifRemoved: {
+      es: 'El pipeline funciona y nadie lo sabe. Las decisiones vuelven a tomarse por intuición y por el último Excel del correo.',
+      en: 'The pipeline works and nobody knows. Decisions go back to gut feeling and the last spreadsheet in the inbox.',
+    },
+    failure: 'stops',
+    evidence: [ev.tfm({ es: 'Centro de mando de retención', en: 'Retention command centre' }), ev.seo({ es: 'Dashboards de KPIs para dirección', en: 'KPI dashboards for management' })],
+    x: C[5], y: 163, w: W, h: H,
+  },
+  {
+    id: 'g_vertex',
+    layer: 'consume',
+    label: { es: 'Vertex AI · modelo y endpoint', en: 'Vertex AI · model and endpoint' },
+    tool: { es: 'entrenamiento · registro · predicción · SHAP', en: 'training · registry · prediction · SHAP' },
+    tools: ['Vertex AI', 'Model Registry', 'SHAP', 'Batch prediction'],
+    desc: {
+      es: 'Entrena sobre las tablas de features, registra cada versión, predice en lote cada mes y explica cada predicción con SHAP para que un manager entienda por qué alguien está en riesgo.',
+      en: 'Trains on the feature tables, registers every version, predicts in batch every month and explains each prediction with SHAP so a manager understands why someone is at risk.',
+    },
+    ifRemoved: {
+      es: 'Se pierde la anticipación. Sigues sabiendo qué pasó, pero no quién está a punto de irse.',
+      en: 'You lose foresight. You still know what happened, but not who is about to leave.',
+    },
+    failure: 'stops',
+    evidence: [ev.tfm({ es: 'Modelo de rotación con explicabilidad', en: 'Churn model with explainability' }), ev.hub({ es: 'Agente con Gemini y búsqueda vectorial', en: 'Gemini agent with vector search' })],
+    x: C[5], y: 253, w: W, h: H,
+  },
+  {
+    id: 'g_sheets',
+    layer: 'consume',
+    label: { es: 'Connected Sheets y exportaciones', en: 'Connected Sheets and exports' },
+    tool: { es: 'BigQuery → Sheets para finanzas', en: 'BigQuery → Sheets for finance' },
+    tools: ['Connected Sheets', 'Exportaciones programadas'],
+    desc: {
+      es: 'Finanzas y operaciones viven en hojas de cálculo. En vez de pelear contra eso, se conecta Sheets a vistas gold: mismos números que el dashboard, en la herramienta que ya usan.',
+      en: 'Finance and operations live in spreadsheets. Instead of fighting it, Sheets connects to gold views: same numbers as the dashboard, in the tool they already use.',
+    },
+    ifRemoved: {
+      es: 'Vuelven las extracciones por correo y las hojas que cada uno mantiene a su manera. A los tres meses, tres versiones del mismo número.',
+      en: 'Back to email extracts and everyone maintaining their own sheet. Three months later, three versions of the same number.',
+    },
+    failure: 'stops',
+    evidence: [ev.prices({ es: 'Precios de referencia mantenidos en hoja y cruzados con el pipeline', en: 'Reference prices kept in a sheet and joined with the pipeline' })],
+    x: C[5], y: 343, w: W, h: H,
+  },
+  {
+    id: 'g_api',
+    layer: 'consume',
+    label: { es: 'Cloud Run · API', en: 'Cloud Run · API' },
+    tool: { es: 'FastAPI para apps y operaciones', en: 'FastAPI for apps and operations' },
+    tools: ['Cloud Run', 'FastAPI', 'JWT', 'Escala a cero'],
+    desc: {
+      es: 'Cuando el dato vuelve al producto: lee el estado en Firestore y las métricas en gold, y las expone con autenticación a la app, al panel de operaciones o a un partner.',
+      en: 'When data goes back into the product: reads state from Firestore and metrics from gold, and exposes them with authentication to the app, the operations panel or a partner.',
+    },
+    ifRemoved: {
+      es: 'El dato se queda en el warehouse. Producto y operaciones vuelven a pedir extracciones por correo.',
+      en: 'Data stays in the warehouse. Product and operations go back to requesting extracts by email.',
+    },
+    failure: 'stops',
+    evidence: [ev.cloudrisk({ es: 'Backend FastAPI sobre Firestore y BigQuery', en: 'FastAPI backend on Firestore and BigQuery' }), ev.hub({ es: 'API con JWT sobre Cloud SQL', en: 'JWT API on Cloud SQL' })],
+    x: C[5], y: 478, w: W, h: H,
+  },
+
+  /* ---------- Transversales ---------- */
+  {
+    id: 'g_composer',
+    layer: 'cross',
+    label: { es: 'Cloud Composer · Airflow', en: 'Cloud Composer · Airflow' },
+    tool: { es: 'DAGs · dependencias · reintentos · SLAs', en: 'DAGs · dependencies · retries · SLAs' },
+    tools: ['Cloud Composer', 'Airflow', 'Cloud Scheduler', 'Dataform workflows'],
+    desc: {
+      es: 'Un DAG por dominio: extrae, procesa, transforma y comprueba, en ese orden y solo si el paso anterior terminó bien. Reintentos con espera, SLAs que avisan si la carga se retrasa y un sitio donde ver cada ejecución.',
+      en: 'One DAG per domain: extract, process, transform and check, in that order and only if the previous step succeeded. Retries with back-off, SLAs that warn when a load is late and one place to see every run.',
+    },
+    ifRemoved: {
+      es: 'Nada se ejecuta a su hora ni en orden. Extractores, Dataflow batch y Dataform se quedan esperando a que alguien los lance a mano. El lunes el dashboard enseña los datos del viernes.',
+      en: "Nothing runs on time or in order. Extractors, Dataflow batch and Dataform sit waiting for someone to launch them by hand. On Monday the dashboard shows Friday's data.",
+    },
+    failure: 'stops',
+    controls: ['g_functions', 'g_runjobs', 'g_df_batch', 'g_dataproc', 'g_enrich', 'g_silver', 'g_assert', 'g_gold', 'g_features'],
+    evidence: [
+      ev.tfm({ es: 'Pipeline que procesa datos nuevos sin intervención manual', en: 'Pipeline processing new data with no manual step' }),
+      ev.cloudrisk({ es: 'Cloud Scheduler disparando jobs', en: 'Cloud Scheduler triggering jobs' }),
+    ],
+    x: C[1], y: 24, w: C[4] + W - C[1], h: 48,
+  },
+  {
+    id: 'g_security',
+    layer: 'cross',
+    label: { es: 'IAM · Secret Manager · VPC Service Controls', en: 'IAM · Secret Manager · VPC Service Controls' },
+    tool: { es: 'mínimo privilegio · secretos · perímetro', en: 'least privilege · secrets · perimeter' },
+    tools: ['IAM', 'Cuentas de servicio', 'Secret Manager', 'VPC-SC', 'Cifrado CMEK'],
+    desc: {
+      es: 'Cada servicio tiene su cuenta con los permisos justos, ningún secreto vive en el código y un perímetro impide que un dataset con datos personales salga del proyecto aunque alguien se equivoque.',
+      en: 'Every service runs with its own account and just the permissions it needs, no secret lives in code and a perimeter stops a dataset with personal data from leaving the project even by mistake.',
+    },
+    ifRemoved: {
+      es: 'Hoy no se rompe nada. Mañana una clave de API acaba en un repo público y un dataset con DNI queda expuesto. Es el fallo que no se ve hasta que sale en la prensa.',
+      en: 'Nothing breaks today. Tomorrow an API key ends up in a public repo and a dataset with national IDs is exposed. The failure you do not see until it makes the news.',
+    },
+    failure: 'latent',
+    controls: ['g_bronze', 'g_silver', 'g_gold', 'g_firestore', 'g_api', 'g_looker', 'g_sheets'],
+    evidence: [
+      ev.tfm({ es: 'Etiquetas de PII y secretos de mercado en Secret Manager', en: 'PII tags and market-data secrets in Secret Manager' }),
+      ev.hotel({ es: 'Rate limiting, CSRF, CSP y bloqueo por intentos', en: 'Rate limiting, CSRF, CSP and lockout' }),
+    ],
+    x: C[0], y: 574, w: C[2] + W - C[0], h: 48,
+  },
+  {
+    id: 'g_dataplex',
+    layer: 'cross',
+    label: { es: 'Dataplex · catálogo, linaje y PII', en: 'Dataplex · catalogue, lineage and PII' },
+    tool: { es: 'qué significa cada tabla y quién la cuida', en: 'what each table means and who owns it' },
+    tools: ['Dataplex', 'Data Catalog', 'Linaje', 'Etiquetas PII', 'Calidad automática'],
+    desc: {
+      es: 'Cada tabla con descripción, dueño, linaje hasta la fuente y etiquetas en las columnas sensibles. Un analista nuevo entiende el warehouse sin preguntar, y auditoría sabe dónde están los datos personales.',
+      en: 'Every table with a description, an owner, lineage back to the source and tags on sensitive columns. A new analyst understands the warehouse without asking, and audit knows where personal data lives.',
+    },
+    ifRemoved: {
+      es: 'En seis meses hay dos tablas llamadas "empleados", nadie sabe cuál es la buena, y una columna con DNI acaba en un dashboard compartido con toda la empresa.',
+      en: 'In six months there are two tables called "employees", nobody knows which one is right, and a column with national IDs ends up in a company-wide dashboard.',
+    },
+    failure: 'latent',
+    controls: ['g_silver', 'g_gold', 'g_looker', 'g_vertex', 'g_sheets'],
+    evidence: [ev.tfm({ es: 'Catálogo, linaje y etiquetas PII en Dataplex', en: 'Catalogue, lineage and PII tags in Dataplex' })],
+    x: C[3], y: 574, w: C[5] + W - C[3], h: 48,
+  },
+  {
+    id: 'g_iac',
+    layer: 'cross',
+    label: { es: 'Terraform · Cloud Build · Artifact Registry', en: 'Terraform · Cloud Build · Artifact Registry' },
+    tool: { es: 'infraestructura y despliegues como código', en: 'infrastructure and deployments as code' },
+    tools: ['Terraform', 'Estado remoto en GCS', 'Cloud Build', 'Artifact Registry', 'Entornos'],
+    desc: {
+      es: 'Datasets, buckets, topics, servicios y permisos definidos en Terraform con estado remoto y un entorno por rama. Cloud Build construye las imágenes, las guarda en Artifact Registry y despliega al hacer merge.',
+      en: 'Datasets, buckets, topics, services and permissions defined in Terraform with remote state and one environment per branch. Cloud Build builds images, stores them in Artifact Registry and deploys on merge.',
+    },
+    ifRemoved: {
+      es: 'Todo sigue funcionando hasta que alguien toca algo a mano en la consola. Entonces nadie sabe recrear el entorno y cada despliegue es distinto.',
+      en: 'Everything keeps working until someone changes something by hand in the console. Then nobody can recreate the environment and every deployment is different.',
+    },
+    failure: 'latent',
+    controls: ['g_datastream', 'g_functions', 'g_pubsub', 'g_runjobs', 'g_dataproc', 'g_gcs', 'g_df_batch', 'g_df_stream', 'g_bronze', 'g_enrich', 'g_firestore', 'g_silver', 'g_assert', 'g_gold', 'g_features', 'g_looker', 'g_vertex', 'g_sheets', 'g_api'],
+    evidence: [
+      ev.cloudrisk({ es: 'Doce módulos Terraform y despliegue con un solo apply', en: 'Twelve Terraform modules and a single-apply deployment' }),
+      ev.tfm({ es: 'Entornos y CI/CD en Terraform', en: 'Environments and CI/CD in Terraform' }),
+      ev.hub({ es: 'Tres servicios en Cloud Run con GitHub Actions', en: 'Three Cloud Run services with GitHub Actions' }),
+    ],
+    x: C[0], y: 640, w: C[2] + W - C[0], h: 48,
+  },
+  {
+    id: 'g_observ',
+    layer: 'cross',
+    label: { es: 'Cloud Logging · Monitoring · Billing', en: 'Cloud Logging · Monitoring · Billing' },
+    tool: { es: 'logs, alertas, presupuestos y runbooks', en: 'logs, alerts, budgets and runbooks' },
+    tools: ['Cloud Logging', 'Cloud Monitoring', 'Alertas', 'Billing export', 'Presupuestos'],
+    desc: {
+      es: 'Logs centralizados, una alerta cuando una carga no llega o un DAG falla, y la facturación exportada a BigQuery con presupuestos por proyecto. Un runbook por incidencia habitual.',
+      en: 'Centralised logs, an alert when a load does not arrive or a DAG fails, and billing exported to BigQuery with per-project budgets. One runbook per common incident.',
+    },
+    ifRemoved: {
+      es: 'Los fallos siguen ocurriendo, solo que ahora los descubre negocio. Y la factura de una consulta mal escrita se descubre a fin de mes.',
+      en: 'Failures still happen, only now business discovers them. And the bill for a badly written query is discovered at month end.',
+    },
+    failure: 'latent',
+    controls: ['g_datastream', 'g_functions', 'g_pubsub', 'g_runjobs', 'g_df_batch', 'g_df_stream', 'g_dataproc', 'g_silver', 'g_assert', 'g_gold', 'g_vertex'],
+    evidence: [
+      ev.tfm({ es: 'Runbook del pipeline de ML y estimación de costes', en: 'ML pipeline runbook and cost estimate' }),
+      ev.air({ es: 'Alertas por Telegram y dashboards de Grafana', en: 'Telegram alerts and Grafana dashboards' }),
+    ],
+    x: C[3], y: 640, w: C[5] + W - C[3], h: 48,
+  },
+];
+
+const edges: Edge[] = [
+  { from: 'g_cloudsql', to: 'g_datastream', label: { es: 'log de cambios', en: 'change log' } },
+  { from: 'g_saas', to: 'g_functions', label: { es: 'REST · JSON', en: 'REST · JSON' } },
+  { from: 'g_events', to: 'g_pubsub', label: { es: 'publicar', en: 'publish' } },
+  { from: 'g_files', to: 'g_runjobs', label: { es: 'SFTP · Drive', en: 'SFTP · Drive' } },
+  { from: 'g_datastream', to: 'g_gcs', label: { es: 'Avro', en: 'Avro' } },
+  { from: 'g_functions', to: 'g_gcs', label: { es: 'JSON', en: 'JSON' } },
+  { from: 'g_runjobs', to: 'g_gcs', label: { es: 'CSV', en: 'CSV' } },
+  { from: 'g_pubsub', to: 'g_df_stream', label: { es: 'suscripción', en: 'subscription' } },
+  { from: 'g_gcs', to: 'g_df_batch' },
+  { from: 'g_gcs', to: 'g_dataproc' },
+  { from: 'g_df_batch', to: 'g_bronze', label: { es: 'carga diaria', en: 'daily load' } },
+  { from: 'g_dataproc', to: 'g_bronze', label: { es: 'histórico', en: 'history' } },
+  { from: 'g_df_stream', to: 'g_bronze', label: { es: 'streaming insert', en: 'streaming insert' } },
+  { from: 'g_df_stream', to: 'g_firestore', label: { es: 'estado', en: 'state' } },
+  { from: 'g_bronze', to: 'g_silver', label: { es: 'SQLX', en: 'SQLX' } },
+  { from: 'g_bronze', to: 'g_enrich' },
+  { from: 'g_enrich', to: 'g_silver', label: { es: 'sentimiento', en: 'sentiment' } },
+  { from: 'g_silver', to: 'g_assert' },
+  { from: 'g_assert', to: 'g_gold' },
+  { from: 'g_gold', to: 'g_features' },
+  { from: 'g_gold', to: 'g_looker', label: { es: 'vistas', en: 'views' } },
+  { from: 'g_gold', to: 'g_sheets' },
+  { from: 'g_gold', to: 'g_api' },
+  { from: 'g_features', to: 'g_vertex', label: { es: 'entrenamiento', en: 'training' } },
+  { from: 'g_firestore', to: 'g_api', label: { es: 'lecturas en vivo', en: 'live reads' } },
+];
+
+export const gcp: Architecture = {
+  id: 'gcp',
+  name: { es: 'Google Cloud', en: 'Google Cloud' },
+  tagline: { es: 'Servicios reales, arquitectura completa', en: 'Real services, full architecture' },
+  intro: {
+    es: 'La plataforma que montaría hoy en Google Cloud para una empresa mediana: captura de cambios desde las bases operativas, APIs y ficheros aterrizando en Cloud Storage, eventos por Pub/Sub, Dataflow en batch y en streaming, BigQuery por capas con Dataform, y consumo desde Looker Studio, Vertex AI, Sheets y una API. Debajo, lo que la mantiene viva: Composer, Dataplex, IAM, Terraform y observabilidad.',
+    en: 'The platform I would build today on Google Cloud for a mid-sized company: change capture from operational databases, APIs and files landing in Cloud Storage, events through Pub/Sub, Dataflow in batch and streaming, layered BigQuery with Dataform, and consumption from Looker Studio, Vertex AI, Sheets and an API. Underneath, what keeps it alive: Composer, Dataplex, IAM, Terraform and observability.',
+  },
+  columns,
+  nodes,
+  edges,
+  canvas: { width: C[5] + W + 24, height: 708 },
+  layers: [
+    {
+      key: 'sources',
+      title: { es: '1 · Fuentes', en: '1 · Sources' },
+      what: { es: 'Bases operativas en Cloud SQL, SaaS con API, eventos de apps y sensores, y ficheros de negocio.', en: 'Operational databases in Cloud SQL, SaaS behind APIs, app and sensor events, and business files.' },
+      why: { es: 'Cada tipo de fuente falla distinto: una base se satura, una API cambia formato, un fichero llega tarde. Por eso cada una tiene su método de ingesta.', en: 'Each source fails differently: a database saturates, an API changes format, a file arrives late. That is why each gets its own ingestion method.' },
+      services: ['Cloud SQL', 'AlloyDB', 'APIs REST', 'SFTP', 'Drive'],
+      mine: { es: 'RRHH, Slack, Eurostat y Adzuna en el TFM; GPS, clima y aire en CloudRISK; catálogos públicos en el monitor de precios.', en: 'HR, Slack, Eurostat and Adzuna in the thesis; GPS, weather and air in CloudRISK; public catalogues in the price monitor.' },
+    },
+    {
+      key: 'ingest',
+      title: { es: '2 · Ingesta', en: '2 · Ingestion' },
+      what: { es: 'Extractores que mueven datos sin transformarlos: Datastream captura cambios, Cloud Functions llama a las APIs, Pub/Sub recibe eventos y Cloud Run Jobs recoge ficheros.', en: 'Extractors that move data without transforming it: Datastream captures changes, Cloud Functions call APIs, Pub/Sub receives events and Cloud Run Jobs collect files.' },
+      why: { es: 'Separar extraer de transformar permite reintentar sin perder nada y cambiar una fuente sin tocar el resto.', en: 'Separating extraction from transformation lets you retry without losing anything and swap a source without touching the rest.' },
+      services: ['Datastream', 'Cloud Functions', 'Pub/Sub', 'Cloud Run Jobs', 'Secret Manager'],
+      mine: { es: 'Walker como Cloud Run Job y tres topics de Pub/Sub en CloudRISK; extractores de Eurostat y Adzuna en el TFM.', en: 'Walker as a Cloud Run Job and three Pub/Sub topics in CloudRISK; Eurostat and Adzuna extractors in the thesis.' },
+    },
+    {
+      key: 'process',
+      title: { es: '3 · Landing y procesamiento', en: '3 · Landing and processing' },
+      what: { es: 'Todo aterriza crudo e inmutable en Cloud Storage. Dataflow batch parsea y valida; Dataflow streaming aplica reglas en continuo; Dataproc Serverless reprocesa histórico con PySpark.', en: 'Everything lands raw and immutable in Cloud Storage. Dataflow batch parses and validates; Dataflow streaming applies rules continuously; Dataproc Serverless reprocesses history with PySpark.' },
+      why: { es: 'Guardar el crudo antes de tocarlo es lo que permite reprocesar cuando algo sale mal, y procesar aparte permite escalar sin tocar el warehouse.', en: 'Storing raw data before touching it is what allows reprocessing when something goes wrong, and processing separately allows scaling without touching the warehouse.' },
+      services: ['Cloud Storage', 'Dataflow', 'Apache Beam', 'Dataproc Serverless'],
+      mine: { es: 'Pipeline stateful de Beam con antitrampas en CloudRISK; landing en Cloud Storage en el TFM.', en: 'Stateful Beam pipeline with anti-cheat in CloudRISK; Cloud Storage landing in the thesis.' },
+    },
+    {
+      key: 'storage',
+      title: { es: '4 · Bronze y estado', en: '4 · Bronze and state' },
+      what: { es: 'BigQuery bronze guarda la historia sin transformar; Firestore guarda el presente que leen las apps; un servicio enriquece los textos con Vertex AI.', en: 'BigQuery bronze keeps untransformed history; Firestore keeps the present that apps read; a service enriches text with Vertex AI.' },
+      why: { es: 'Analítica y operación tienen necesidades opuestas: mucho volumen barato frente a lecturas instantáneas. Un almacén para cada una.', en: 'Analytics and operations have opposite needs: cheap bulk volume versus instant reads. One store for each.' },
+      services: ['BigQuery', 'Firestore', 'Cloud Run', 'Vertex AI'],
+      mine: { es: 'Bronze normalizada y sentimiento de Slack en el TFM; saldo y mapa en Firestore en CloudRISK.', en: 'Normalised bronze and Slack sentiment in the thesis; balances and map in Firestore in CloudRISK.' },
+    },
+    {
+      key: 'transform',
+      title: { es: '5 · Silver y gold con Dataform', en: '5 · Silver and gold with Dataform' },
+      what: { es: 'Modelos SQL versionados: silver limpia y da claves, las aserciones bloquean lo que no cumple, gold sirve hechos y KPIs, y las tablas de features alimentan al modelo.', en: 'Versioned SQL models: silver cleans and keys, assertions block what fails, gold serves facts and KPIs, and feature tables feed the model.' },
+      why: { es: 'Es la capa donde se define una sola verdad. Cada métrica tiene dueño, fórmula y umbral escritos, y los tests garantizan que llega bien.', en: 'This is the layer where a single truth is defined. Every metric has a written owner, formula and threshold, and tests guarantee it arrives right.' },
+      services: ['Dataform', 'BigQuery', 'BigQuery ML'],
+      mine: { es: 'Vistas gold, catálogo de KPIs y aserciones en el TFM; modelos dbt cada cinco minutos en Calidad del aire.', en: 'Gold views, KPI catalogue and assertions in the thesis; dbt models every five minutes in Air quality.' },
+    },
+    {
+      key: 'consume',
+      title: { es: '6 · Consumo', en: '6 · Consumption' },
+      what: { es: 'Looker Studio para decidir, Vertex AI para anticipar, Connected Sheets para finanzas y una API en Cloud Run para el producto.', en: 'Looker Studio to decide, Vertex AI to anticipate, Connected Sheets for finance and a Cloud Run API for the product.' },
+      why: { es: 'Todos leen la misma capa gold. No hay tres versiones del KPI según quién pregunte.', en: 'Everyone reads the same gold layer. There are not three versions of the KPI depending on who asks.' },
+      services: ['Looker Studio', 'Vertex AI', 'Connected Sheets', 'Cloud Run'],
+      mine: { es: 'Centro de mando y modelo con SHAP en el TFM; backend FastAPI en CloudRISK; agente con Gemini en el Student Hub.', en: 'Command centre and SHAP model in the thesis; FastAPI backend in CloudRISK; Gemini agent in the Student Hub.' },
+    },
+    {
+      key: 'cross',
+      title: { es: 'Transversal', en: 'Cross-cutting' },
+      what: { es: 'Composer orquesta, Dataplex cataloga, IAM y Secret Manager protegen, Terraform y Cloud Build despliegan, Logging y Billing vigilan.', en: 'Composer orchestrates, Dataplex catalogues, IAM and Secret Manager protect, Terraform and Cloud Build deploy, Logging and Billing watch.' },
+      why: { es: 'No mueven ni un dato, pero son la diferencia entre una demo y una plataforma que sobrevive al primer mes.', en: 'They move no data at all, but they are the difference between a demo and a platform that survives its first month.' },
+      services: ['Cloud Composer', 'Dataplex', 'IAM', 'Terraform', 'Cloud Build', 'Cloud Monitoring'],
+      mine: { es: 'Terraform con un solo apply y CI/CD en CloudRISK y el Student Hub; catálogo y PII en Dataplex, runbook y costes en el TFM.', en: 'Single-apply Terraform and CI/CD in CloudRISK and the Student Hub; catalogue and PII in Dataplex, runbook and costs in the thesis.' },
+    },
+  ],
+  story: [
+    { node: 'g_cloudsql', title: { es: 'Cambia un registro', en: 'A record changes' }, text: { es: 'RRHH actualiza el salario de un empleado en Cloud SQL.', en: 'HR updates an employee salary in Cloud SQL.' } },
+    { node: 'g_datastream', title: { es: 'Datastream lo captura', en: 'Datastream captures it' }, text: { es: 'El cambio se lee del log de transacciones y se escribe como Avro en Cloud Storage en menos de un minuto, sin consultar la base.', en: 'The change is read from the transaction log and written as Avro to Cloud Storage in under a minute, without querying the database.' } },
+    { node: 'g_gcs', title: { es: 'Aterriza sin tocar', en: 'It lands untouched' }, text: { es: 'Queda en una ruta con la fecha. Nadie lo modifica jamás: si algo sale mal después, se reprocesa desde aquí.', en: 'It sits in a dated path. Nobody ever modifies it: if anything goes wrong later, it is reprocessed from here.' } },
+    { node: 'g_df_batch', title: { es: 'Dataflow lo valida', en: 'Dataflow validates it' }, text: { es: 'Esa noche el job batch parsea el Avro, comprueba el esquema y escribe la fila en BigQuery bronze. Si no cumple, va a la tabla de rechazados con el motivo.', en: 'That night the batch job parses the Avro, checks the schema and writes the row to BigQuery bronze. If it fails, it goes to the rejects table with the reason.' } },
+    { node: 'g_silver', title: { es: 'Dataform lo modela', en: 'Dataform models it' }, text: { es: 'Silver cierra la versión anterior del salario y abre la nueva con fecha de vigencia: historia completa, sin duplicados.', en: 'Silver closes the previous salary version and opens the new one with an effective date: full history, no duplicates.' } },
+    { node: 'g_assert', title: { es: 'Pasa las aserciones', en: 'It passes the assertions' }, text: { es: 'Clave única, salario dentro de rango, empleado existente en la dimensión. Si algo falla, gold no se toca y salta una alerta.', en: 'Unique key, salary within range, employee present in the dimension. If anything fails, gold is left alone and an alert fires.' } },
+    { node: 'g_gold', title: { es: 'Se convierte en KPI', en: 'It becomes a KPI' }, text: { es: 'La tabla de hechos recalcula la brecha frente al salario de mercado de Eurostat para ese rol.', en: 'The fact table recomputes the gap against the Eurostat market salary for that role.' } },
+    { node: 'g_vertex', title: { es: 'Vertex AI reevalúa', en: 'Vertex AI re-scores' }, text: { es: 'La predicción mensual actualiza el riesgo de salida del empleado y SHAP explica que la brecha salarial pesa menos que antes.', en: 'The monthly prediction updates the employee\'s flight risk and SHAP explains that the salary gap now weighs less than before.' } },
+    { node: 'g_looker', title: { es: 'El manager lo ve', en: 'The manager sees it' }, text: { es: 'En Looker Studio el empleado sale de la lista de riesgo. Misma cifra en la hoja de finanzas, porque leen la misma vista gold.', en: 'In Looker Studio the employee drops off the risk list. Same figure in the finance sheet, because they read the same gold view.' } },
+  ],
+  scenarios: [
+    { node: 'g_composer', label: { es: '¿Y si cae Composer?', en: 'What if Composer goes down?' } },
+    { node: 'g_assert', label: { es: '¿Y si no hay aserciones?', en: 'What if there are no assertions?' } },
+    { node: 'g_gcs', label: { es: '¿Y si no guardamos el crudo?', en: 'What if we do not keep raw data?' } },
+    { node: 'g_security', label: { es: '¿Y si no hay IAM ni secretos?', en: 'What if there is no IAM or secrets?' } },
+    { node: 'g_iac', label: { es: '¿Y si no hay Terraform?', en: 'What if there is no Terraform?' } },
+  ],
+};

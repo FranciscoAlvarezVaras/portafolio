@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import PageHeader from './PageHeader.astro';
 import Pipeline from './Pipeline.astro';
+import { gcp, reference } from '../data/pipeline';
 import { type Lang, useTranslations, routes, otherLang } from '../i18n/ui';
 
 interface Props {
@@ -10,24 +11,117 @@ interface Props {
 const { lang } = Astro.props;
 const t = useTranslations(lang);
 const r = routes[lang];
+const variants = [gcp, reference];
 ---
 
 <Base lang={lang} path={r.pipeline} altPath={routes[otherLang(lang)].pipeline} title={`${t('meta.pipeline')} · Francisco Álvarez Varas`} description={t('pipeline.intro')}>
-  <PageHeader kicker={t('pipeline.kicker')} title={t('pipeline.title')} intro={t('pipeline.intro')} />
+  <PageHeader kicker={t('pipeline.kicker')} title={t('pipeline.title')} intro={t('pipeline.intro')}>
+    <div class="variants" role="tablist" aria-label={t('pipeline.variant.label')}>
+      <span class="vlabel">{t('pipeline.variant.label')}</span>
+      {variants.map((v, i) => (
+        <button type="button" role="tab" class="vtab" data-variant={v.id} aria-selected={i === 0 ? 'true' : 'false'}>
+          <strong>{v.name[lang]}</strong>
+          <span>{v.tagline[lang]}</span>
+        </button>
+      ))}
+    </div>
+  </PageHeader>
+
   <section class="section wide">
     <div class="container">
-      <Pipeline lang={lang} />
+      {variants.map((v, i) => (
+        <div class="variant" data-variant-panel={v.id} hidden={i !== 0}>
+          <p class="lead vintro">{v.intro[lang]}</p>
+          <Pipeline arch={v} lang={lang} />
+        </div>
+      ))}
     </div>
   </section>
 </Base>
 
+<script>
+  function boot() {
+    const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-variant]:not([data-ready])'));
+    if (!tabs.length) return;
+    const panels = Array.from(document.querySelectorAll<HTMLElement>('[data-variant-panel]'));
+    const show = (id: string) => {
+      document.dispatchEvent(new CustomEvent('pipeline:stopall'));
+      for (const tb of tabs) tb.setAttribute('aria-selected', String(tb.dataset.variant === id));
+      for (const p of panels) p.hidden = p.dataset.variantPanel !== id;
+      try {
+        localStorage.setItem('pipeline-variant', id);
+      } catch {}
+    };
+    for (const tb of tabs) {
+      tb.dataset.ready = '1';
+      tb.addEventListener('click', () => show(tb.dataset.variant!));
+    }
+    try {
+      const saved = localStorage.getItem('pipeline-variant');
+      if (saved && tabs.some((tb) => tb.dataset.variant === saved)) show(saved);
+    } catch {}
+  }
+  document.addEventListener('astro:page-load', boot);
+  boot();
+</script>
+
 <style>
+  .variants {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 1.5rem;
+  }
+  .vlabel {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-right: 0.25rem;
+  }
+  .vtab {
+    font: inherit;
+    text-align: left;
+    display: grid;
+    gap: 0.1rem;
+    padding: 0.6rem 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    min-width: 200px;
+    transition:
+      border-color 0.15s,
+      background 0.15s;
+  }
+  .vtab span {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .vtab:hover {
+    border-color: var(--accent);
+  }
+  .vtab[aria-selected='true'] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #faf9f5;
+  }
+  .vtab[aria-selected='true'] span {
+    color: #cfcdc4;
+  }
   .wide {
     background: var(--bg-2);
     border-top: 1px solid var(--border);
     padding-top: 2rem;
   }
   .wide .container {
-    --max: 1280px;
+    --max: 1500px;
+  }
+  .vintro {
+    max-width: 80ch;
+    margin-bottom: 1.5rem;
   }
 </style>
