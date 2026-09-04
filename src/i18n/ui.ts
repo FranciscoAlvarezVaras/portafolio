@@ -1,0 +1,278 @@
+export type Lang = 'es' | 'en';
+export const LANGS: Lang[] = ['es', 'en'];
+export const DEFAULT_LANG: Lang = 'es';
+
+export function isLang(x: string | undefined): x is Lang {
+  return x === 'es' || x === 'en';
+}
+
+/** Rutas por idioma. La home lleva ancla de sección; los proyectos, su carpeta. */
+export const routes = {
+  es: {
+    home: '/es/',
+    projects: '/es/proyectos/',
+    anchors: {
+      pipeline: 'pipeline',
+      projects: 'proyectos',
+      master: 'master',
+      experience: 'experiencia',
+      stack: 'stack',
+      education: 'formacion',
+      contact: 'contacto',
+    },
+  },
+  en: {
+    home: '/en/',
+    projects: '/en/projects/',
+    anchors: {
+      pipeline: 'pipeline',
+      projects: 'projects',
+      master: 'masters',
+      experience: 'experience',
+      stack: 'stack',
+      education: 'education',
+      contact: 'contact',
+    },
+  },
+} as const;
+
+export function projectUrl(lang: Lang, slug: string) {
+  return `${routes[lang].projects}${slug}/`;
+}
+
+export function otherLang(lang: Lang): Lang {
+  return lang === 'es' ? 'en' : 'es';
+}
+
+export const ui = {
+  es: {
+    'meta.title': 'Francisco Álvarez Varas · Analytics Engineer',
+    'meta.description':
+      'Analytics Engineer y Data Analyst en Valencia. Modelado de datos con SQL y dbt, pipelines en Google Cloud y dashboards que la gente de negocio usa de verdad.',
+    'nav.pipeline': 'Cómo trabajo',
+    'nav.projects': 'Proyectos',
+    'nav.master': 'Máster',
+    'nav.experience': 'Experiencia',
+    'nav.stack': 'Stack',
+    'nav.education': 'Formación',
+    'nav.contact': 'Contacto',
+    'nav.lang': 'English',
+    'nav.langShort': 'EN',
+    'nav.menu': 'Menú',
+
+    'hero.kicker': 'Analytics Engineer · Data Analyst',
+    'hero.name': 'Francisco Álvarez Varas',
+    'hero.pitch':
+      'Convierto datos dispersos en modelos, métricas y dashboards que la gente de negocio usa de verdad. Tres años de analítica con Python y SQL, y un máster en Big Data & Cloud construyendo pipelines en Google Cloud.',
+    'hero.location': 'Valencia · remoto',
+    'hero.status': 'Disponible para incorporación',
+    'hero.cta.projects': 'Ver proyectos',
+    'hero.cta.cv': 'Descargar CV',
+    'hero.cta.linkedin': 'LinkedIn',
+    'hero.fact1.k': '3+ años',
+    'hero.fact1.v': 'en analítica de datos y negocio',
+    'hero.fact2.k': '7 proyectos',
+    'hero.fact2.v': 'end-to-end, de la fuente al dashboard',
+    'hero.fact3.k': 'GCP · BigQuery · dbt',
+    'hero.fact3.v': 'stack principal, con Terraform y CI/CD',
+
+    'pipeline.kicker': 'Cómo trabajo',
+    'pipeline.title': 'Un pipeline de datos end-to-end, pieza a pieza',
+    'pipeline.intro':
+      'Esta es la arquitectura que aplico en mis proyectos: de las fuentes al dashboard, con calidad, orquestación e infraestructura como código. Pulsa una pieza para ver qué hace y dónde la he construido. Y quítala para ver qué se rompe aguas abajo.',
+    'pipeline.hint': 'Pulsa una pieza · Quítala con el botón del panel',
+    'pipeline.remove': 'Quitar esta pieza',
+    'pipeline.restore': 'Devolver la pieza',
+    'pipeline.restoreAll': 'Restaurar todo',
+    'pipeline.tools': 'Herramientas',
+    'pipeline.evidence': 'Dónde lo he hecho',
+    'pipeline.whatBreaks': 'Qué pasa si falta',
+    'pipeline.affected': 'Piezas afectadas',
+    'pipeline.removedCount': 'piezas quitadas',
+    'pipeline.legend.stale': 'Sin datos o desactualizado',
+    'pipeline.legend.dirty': 'Datos no fiables',
+    'pipeline.legend.risk': 'Riesgo latente',
+    'pipeline.legend.removed': 'Pieza quitada',
+    'pipeline.status.stale': 'sin datos',
+    'pipeline.status.dirty': 'no fiable',
+    'pipeline.status.risk': 'riesgo',
+    'pipeline.status.removed': 'quitada',
+    'pipeline.healthy': 'Todo el pipeline está en pie. Quita una pieza para ver su efecto.',
+    'pipeline.noscript': 'El diagrama es interactivo con JavaScript activado. Sin él, esta es la vista estática.',
+
+    'projects.kicker': 'Proyectos destacados',
+    'projects.title': 'Casos, no solo repositorios',
+    'projects.intro':
+      'Cada ficha cuenta el contexto, el problema, lo que hice yo y el resultado. Con enlaces al código y a las demos cuando existen.',
+    'projects.viewCase': 'Ver el caso',
+    'projects.role': 'Mi rol',
+    'projects.result': 'Resultado',
+    'projects.stack': 'Stack',
+    'projects.period': 'Periodo',
+    'projects.team': 'Equipo',
+    'projects.links': 'Enlaces',
+    'projects.link.repo': 'Código',
+    'projects.link.live': 'Web en producción',
+    'projects.link.dashboard': 'Dashboard',
+    'projects.link.docs': 'Documentación',
+    'projects.back': 'Volver a proyectos',
+    'projects.more': 'Más proyectos',
+    'projects.category.analytics': 'Analítica',
+    'projects.category.engineering': 'Ingeniería de datos',
+    'projects.category.product': 'Producto',
+
+    'master.kicker': 'Máster Big Data & Cloud · EDEM 2025-2026',
+    'master.title': 'Un año construyendo, de Docker a Vertex AI',
+    'master.intro':
+      'Tres Data Projects en equipo, un hackathon, un TFM con empresa real y prácticas en cada módulo. Esto es el recorrido completo, con el código que puedo enseñar.',
+    'master.milestones': 'Hitos',
+    'master.practice': 'Prácticas por módulo',
+    'master.practice.intro': 'Repositorios de ejercicios, uno por tecnología. Los que aún son privados se abrirán en breve.',
+    'master.private': 'privado',
+    'master.viewRepo': 'Ver repo',
+
+    'experience.kicker': 'Experiencia',
+    'experience.title': 'De optimizar páginas a medir el negocio',
+    'experience.before': 'Antes de los datos',
+    'experience.before.intro':
+      'Ocho años en marketing, investigación de mercados y administración en manufactura, hotelería, consumo masivo y servicios financieros. De ahí viene el criterio de negocio que aplico a los datos.',
+
+    'stack.kicker': 'Stack',
+    'stack.title': 'Lo que uso cada semana',
+
+    'education.kicker': 'Formación',
+    'education.title': 'Negocio primero, datos después',
+    'education.certs': 'En curso',
+
+    'contact.kicker': 'Contacto',
+    'contact.title': '¿Hablamos?',
+    'contact.intro':
+      'Busco un puesto de Analytics Engineer o Data Analyst en Valencia o en remoto. Escríbeme y te respondo el mismo día.',
+    'contact.email': 'Escribir un email',
+    'contact.cv': 'Descargar CV (PDF)',
+
+    'footer.built': 'Hecho con Astro y desplegado en Vercel. Código abierto en',
+    'footer.rights': 'Francisco Álvarez Varas',
+
+    'cv.file': '/cv/Francisco_Alvarez_Varas_CV_ES.pdf',
+  },
+  en: {
+    'meta.title': 'Francisco Álvarez Varas · Analytics Engineer',
+    'meta.description':
+      'Analytics Engineer and Data Analyst based in Valencia, Spain. Data modelling with SQL and dbt, pipelines on Google Cloud and dashboards business people actually use.',
+    'nav.pipeline': 'How I work',
+    'nav.projects': 'Projects',
+    'nav.master': "Master's",
+    'nav.experience': 'Experience',
+    'nav.stack': 'Stack',
+    'nav.education': 'Education',
+    'nav.contact': 'Contact',
+    'nav.lang': 'Español',
+    'nav.langShort': 'ES',
+    'nav.menu': 'Menu',
+
+    'hero.kicker': 'Analytics Engineer · Data Analyst',
+    'hero.name': 'Francisco Álvarez Varas',
+    'hero.pitch':
+      "I turn scattered data into models, metrics and dashboards that business people actually use. Three years of analytics with Python and SQL, plus a Big Data & Cloud master's building pipelines on Google Cloud.",
+    'hero.location': 'Valencia, Spain · remote',
+    'hero.status': 'Open to work',
+    'hero.cta.projects': 'See projects',
+    'hero.cta.cv': 'Download CV',
+    'hero.cta.linkedin': 'LinkedIn',
+    'hero.fact1.k': '3+ years',
+    'hero.fact1.v': 'in data and business analytics',
+    'hero.fact2.k': '7 projects',
+    'hero.fact2.v': 'end-to-end, from source to dashboard',
+    'hero.fact3.k': 'GCP · BigQuery · dbt',
+    'hero.fact3.v': 'core stack, with Terraform and CI/CD',
+
+    'pipeline.kicker': 'How I work',
+    'pipeline.title': 'An end-to-end data pipeline, piece by piece',
+    'pipeline.intro':
+      'This is the architecture I apply in my projects: from sources to dashboard, with data quality, orchestration and infrastructure as code. Click a piece to see what it does and where I have built it. Then remove it to see what breaks downstream.',
+    'pipeline.hint': 'Click a piece · Remove it from the panel',
+    'pipeline.remove': 'Remove this piece',
+    'pipeline.restore': 'Put the piece back',
+    'pipeline.restoreAll': 'Restore everything',
+    'pipeline.tools': 'Tools',
+    'pipeline.evidence': 'Where I have built it',
+    'pipeline.whatBreaks': 'What happens without it',
+    'pipeline.affected': 'Affected pieces',
+    'pipeline.removedCount': 'pieces removed',
+    'pipeline.legend.stale': 'No data or stale',
+    'pipeline.legend.dirty': 'Unreliable data',
+    'pipeline.legend.risk': 'Latent risk',
+    'pipeline.legend.removed': 'Removed piece',
+    'pipeline.status.stale': 'no data',
+    'pipeline.status.dirty': 'unreliable',
+    'pipeline.status.risk': 'at risk',
+    'pipeline.status.removed': 'removed',
+    'pipeline.healthy': 'The whole pipeline is up. Remove a piece to see its effect.',
+    'pipeline.noscript': 'The diagram is interactive with JavaScript enabled. Without it, this is the static view.',
+
+    'projects.kicker': 'Selected projects',
+    'projects.title': 'Case studies, not just repositories',
+    'projects.intro':
+      'Each case covers the context, the problem, what I did and the outcome. With links to code and demos where they exist.',
+    'projects.viewCase': 'Read the case',
+    'projects.role': 'My role',
+    'projects.result': 'Outcome',
+    'projects.stack': 'Stack',
+    'projects.period': 'Period',
+    'projects.team': 'Team',
+    'projects.links': 'Links',
+    'projects.link.repo': 'Code',
+    'projects.link.live': 'Live site',
+    'projects.link.dashboard': 'Dashboard',
+    'projects.link.docs': 'Documentation',
+    'projects.back': 'Back to projects',
+    'projects.more': 'More projects',
+    'projects.category.analytics': 'Analytics',
+    'projects.category.engineering': 'Data engineering',
+    'projects.category.product': 'Product',
+
+    'master.kicker': "Master's in Big Data & Cloud · EDEM 2025-2026",
+    'master.title': 'A year of building, from Docker to Vertex AI',
+    'master.intro':
+      "Three team Data Projects, a hackathon, a thesis with a real company and hands-on practice in every module. This is the full journey, with the code I can show.",
+    'master.milestones': 'Milestones',
+    'master.practice': 'Practice by module',
+    'master.practice.intro': 'Exercise repositories, one per technology. The ones still private will open soon.',
+    'master.private': 'private',
+    'master.viewRepo': 'View repo',
+
+    'experience.kicker': 'Experience',
+    'experience.title': 'From optimising pages to measuring the business',
+    'experience.before': 'Before data',
+    'experience.before.intro':
+      'Eight years in marketing, market research and administration across manufacturing, hospitality, consumer goods and financial services. That is where the business judgement I bring to data comes from.',
+
+    'stack.kicker': 'Stack',
+    'stack.title': 'What I use every week',
+
+    'education.kicker': 'Education',
+    'education.title': 'Business first, data second',
+    'education.certs': 'In progress',
+
+    'contact.kicker': 'Contact',
+    'contact.title': "Let's talk",
+    'contact.intro':
+      "I'm looking for an Analytics Engineer or Data Analyst role in Valencia or remote. Drop me a line and I'll reply the same day.",
+    'contact.email': 'Send an email',
+    'contact.cv': 'Download CV (PDF)',
+
+    'footer.built': 'Built with Astro and deployed on Vercel. Source code on',
+    'footer.rights': 'Francisco Álvarez Varas',
+
+    'cv.file': '/cv/Francisco_Alvarez_Varas_CV_EN.pdf',
+  },
+} as const;
+
+export type UiKey = keyof (typeof ui)['es'];
+
+export function useTranslations(lang: Lang) {
+  return function t(key: UiKey): string {
+    return ui[lang][key] ?? ui[DEFAULT_LANG][key];
+  };
+}

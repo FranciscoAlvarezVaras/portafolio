@@ -1,0 +1,142 @@
+---
+import { type Lang, useTranslations, routes, projectUrl } from '../i18n/ui';
+import { milestones, practice } from '../data/profile';
+import Section from './Section.astro';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+---
+
+<Section id={routes[lang].anchors.master} kicker={t('master.kicker')} title={t('master.title')} intro={t('master.intro')}>
+  <h3 class="sub">{t('master.milestones')}</h3>
+  <ol class="timeline">
+    {milestones.map((m) => (
+      <li>
+        <span class="when">{m.when}</span>
+        <div class="card body">
+          <h4>{m.project ? <a href={projectUrl(lang, m.project)}>{m.title[lang]}</a> : m.title[lang]}</h4>
+          <p>{m.desc[lang]}</p>
+          <div class="chips">
+            {m.tags.map((tag) => <span class="chip">{tag}</span>)}
+          </div>
+        </div>
+      </li>
+    ))}
+  </ol>
+
+  <h3 class="sub">{t('master.practice')}</h3>
+  <p class="lead small">{t('master.practice.intro')}</p>
+  <ul class="practice">
+    {practice.map((p) => (
+      <li class="card">
+        <div class="head">
+          <strong>{p.name[lang]}</strong>
+          {p.url ? (
+            <a href={p.url} rel="noopener" target="_blank">{t('master.viewRepo')} ↗</a>
+          ) : (
+            <span class="chip chip-outline">{t('master.private')}</span>
+          )}
+        </div>
+        <span class="tech">{p.tech}</span>
+        <p>{p.desc[lang]}</p>
+      </li>
+    ))}
+  </ul>
+</Section>
+
+<style>
+  .sub {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 0 0 1rem;
+  }
+  .small {
+    font-size: 0.95rem;
+    margin-bottom: 1.25rem;
+  }
+  .timeline {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 3rem;
+    display: grid;
+    gap: 1rem;
+  }
+  .timeline li {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 1rem;
+    align-items: start;
+  }
+  .when {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--accent);
+    padding-top: 1.1rem;
+    position: relative;
+  }
+  .body {
+    padding: 1rem 1.25rem;
+  }
+  .body h4 {
+    font-size: 1.05rem;
+    margin: 0 0 0.35rem;
+  }
+  .body h4 a {
+    color: var(--text);
+  }
+  .body p {
+    color: var(--muted);
+    margin: 0 0 0.6rem;
+    font-size: 0.95rem;
+  }
+  .practice {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 0.9rem;
+  }
+  .practice li {
+    padding: 0.9rem 1rem;
+    display: grid;
+    gap: 0.25rem;
+    box-shadow: none;
+  }
+  .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .head a {
+    font-size: 0.82rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .tech {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--faint);
+  }
+  .practice p {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--muted);
+  }
+  @media (max-width: 600px) {
+    .timeline li {
+      grid-template-columns: 1fr;
+      gap: 0.25rem;
+    }
+    .when {
+      padding-top: 0;
+    }
+  }
+</style>

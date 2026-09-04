@@ -1,0 +1,115 @@
+---
+import { type Lang, useTranslations, routes } from '../i18n/ui';
+import { jobs, earlierCareer } from '../data/profile';
+import Section from './Section.astro';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+---
+
+<Section id={routes[lang].anchors.experience} kicker={t('experience.kicker')} title={t('experience.title')}>
+  <ol class="jobs">
+    {jobs.map((j) => (
+      <li>
+        <div class="left">
+          <span class="period">{j.period[lang]}</span>
+        </div>
+        <div class="right">
+          <h3>{j.role[lang]} <span class="company">· {j.company}</span></h3>
+          <ul class="bullets">
+            {j.bullets[lang].map((b) => <li>{b}</li>)}
+          </ul>
+          <div class="chips">
+            {j.tags.map((tag) => <span class="chip chip-outline">{tag}</span>)}
+          </div>
+        </div>
+      </li>
+    ))}
+  </ol>
+
+  <details class="before card">
+    <summary>{t('experience.before')} <span class="years">2014 – 2022</span></summary>
+    <p>{t('experience.before.intro')}</p>
+    <ul>
+      {earlierCareer[lang].map((line) => <li>{line}</li>)}
+    </ul>
+  </details>
+</Section>
+
+<style>
+  .jobs {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem;
+    display: grid;
+    gap: 1.75rem;
+  }
+  .jobs > li {
+    display: grid;
+    grid-template-columns: 170px 1fr;
+    gap: 1.25rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .jobs > li:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .period {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--accent);
+  }
+  h3 {
+    font-size: 1.1rem;
+    margin: 0 0 0.5rem;
+  }
+  .company {
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .bullets {
+    margin: 0 0 0.6rem;
+    padding-left: 1.1rem;
+    color: var(--muted);
+  }
+  .bullets li {
+    margin-bottom: 0.25rem;
+  }
+  .before {
+    padding: 1rem 1.25rem;
+    box-shadow: none;
+  }
+  .before summary {
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .years {
+    font-family: var(--mono);
+    font-weight: 400;
+    color: var(--faint);
+    font-size: 0.85rem;
+  }
+  .before p {
+    color: var(--muted);
+    margin: 0.75rem 0 0.5rem;
+  }
+  .before ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+  @media (max-width: 640px) {
+    .jobs > li {
+      grid-template-columns: 1fr;
+      gap: 0.35rem;
+    }
+  }
+</style>

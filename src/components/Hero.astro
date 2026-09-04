@@ -1,0 +1,133 @@
+---
+import { type Lang, useTranslations, routes } from '../i18n/ui';
+import { contact } from '../data/profile';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const a = routes[lang].anchors;
+---
+
+<section class="hero">
+  <div class="container grid">
+    <div class="copy">
+      <p class="status">
+        <span class="dot" aria-hidden="true"></span>
+        {t('hero.status')} · {t('hero.location')}
+      </p>
+      <p class="kicker">{t('hero.kicker')}</p>
+      <h1>{t('hero.name')}</h1>
+      <p class="pitch">{t('hero.pitch')}</p>
+      <div class="ctas">
+        <a class="btn btn-primary" href={`#${a.projects}`}>{t('hero.cta.projects')}</a>
+        <a class="btn btn-secondary" href={t('cv.file')} download>{t('hero.cta.cv')}</a>
+        <a class="btn btn-ghost" href={contact.linkedin} rel="noopener" target="_blank">
+          {t('hero.cta.linkedin')}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9" /></svg>
+        </a>
+      </div>
+    </div>
+
+    <ul class="facts" aria-label="Datos clave">
+      <li>
+        <strong>{t('hero.fact1.k')}</strong>
+        <span>{t('hero.fact1.v')}</span>
+      </li>
+      <li>
+        <strong>{t('hero.fact2.k')}</strong>
+        <span>{t('hero.fact2.v')}</span>
+      </li>
+      <li>
+        <strong class="mono">{t('hero.fact3.k')}</strong>
+        <span>{t('hero.fact3.v')}</span>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding-block: clamp(3.5rem, 9vw, 7rem) clamp(3rem, 7vw, 5rem);
+    background:
+      radial-gradient(60% 50% at 85% 10%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%),
+      radial-gradient(40% 40% at 10% 90%, color-mix(in srgb, var(--green) 10%, transparent), transparent 70%);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: center;
+  }
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 0.3rem 0.75rem 0.3rem 0.6rem;
+    border-radius: 999px;
+    margin-bottom: 1.25rem;
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 25%, transparent);
+  }
+  h1 {
+    margin-bottom: 1rem;
+  }
+  .pitch {
+    font-size: 1.15rem;
+    color: var(--muted);
+    max-width: 58ch;
+    margin-bottom: 1.75rem;
+  }
+  .ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+  .facts {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.75rem;
+  }
+  .facts li {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.15rem;
+    display: grid;
+    gap: 0.15rem;
+    box-shadow: var(--shadow);
+  }
+  .facts strong {
+    font-size: 1.35rem;
+    letter-spacing: -0.01em;
+  }
+  .facts strong.mono {
+    font-family: var(--mono);
+    font-size: 1.05rem;
+    color: var(--accent);
+  }
+  .facts span {
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+  @media (max-width: 860px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+    .facts {
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+  }
+</style>

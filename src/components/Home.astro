@@ -1,0 +1,43 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from './Hero.astro';
+import Section from './Section.astro';
+import Pipeline from './Pipeline.astro';
+import Projects from './Projects.astro';
+import Master from './Master.astro';
+import Experience from './Experience.astro';
+import Stack from './Stack.astro';
+import Education from './Education.astro';
+import Contact from './Contact.astro';
+import { type Lang, useTranslations, routes, otherLang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const a = routes[lang].anchors;
+---
+
+<Base lang={lang} path={routes[lang].home} altPath={routes[otherLang(lang)].home}>
+  <Hero lang={lang} />
+  <Section id={a.pipeline} kicker={t('pipeline.kicker')} title={t('pipeline.title')} intro={t('pipeline.intro')} class="pipeline-section">
+    <Pipeline lang={lang} />
+  </Section>
+  <Projects lang={lang} />
+  <Master lang={lang} />
+  <Experience lang={lang} />
+  <Stack lang={lang} />
+  <Education lang={lang} />
+  <Contact lang={lang} />
+</Base>
+
+<style is:global>
+  .pipeline-section {
+    background: var(--bg-2);
+    border-top: 1px solid var(--border);
+  }
+  .pipeline-section .container {
+    --max: 1280px;
+  }
+</style>

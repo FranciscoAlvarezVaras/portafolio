@@ -1,0 +1,91 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { type Lang, useTranslations, otherLang, routes } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  title?: string;
+  description?: string;
+  /** Ruta equivalente en el otro idioma (para el selector y hreflang). */
+  altPath: string;
+  /** Ruta actual (sin dominio). */
+  path: string;
+  ogImage?: string;
+}
+
+const { lang, altPath, path } = Astro.props;
+const t = useTranslations(lang);
+const title = Astro.props.title ?? t('meta.title');
+const description = Astro.props.description ?? t('meta.description');
+const site = Astro.site?.toString().replace(/\/$/, '') ?? '';
+const canonical = `${site}${path}`;
+const ogImage = `${site}${Astro.props.ogImage ?? '/og.png'}`;
+const other = otherLang(lang);
+---
+
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang={lang} href={canonical} />
+    <link rel="alternate" hreflang={other} href={`${site}${altPath}`} />
+    <link rel="alternate" hreflang="x-default" href={`${site}${routes.es.home}`} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content={lang === 'es' ? 'es_ES' : 'en_GB'} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#faf9f5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#14122b" media="(prefers-color-scheme: dark)" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      name: 'Francisco Álvarez Varas',
+      jobTitle: 'Analytics Engineer',
+      url: site || undefined,
+      address: { '@type': 'PostalAddress', addressLocality: 'Valencia', addressCountry: 'ES' },
+      sameAs: ['https://www.linkedin.com/in/frankalvarezv/', 'https://github.com/FranciscoAlvarezVaras'],
+      knowsAbout: ['SQL', 'dbt', 'BigQuery', 'Python', 'Google Cloud', 'Looker Studio', 'Terraform'],
+    })} />
+  </head>
+  <body>
+    <a class="skip" href="#main">{lang === 'es' ? 'Saltar al contenido' : 'Skip to content'}</a>
+    <Header lang={lang} altPath={altPath} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer lang={lang} />
+  </body>
+</html>
+
+<style>
+  .skip {
+    position: absolute;
+    left: 1rem;
+    top: -3rem;
+    background: var(--accent);
+    color: var(--accent-ink);
+    padding: 0.5rem 0.9rem;
+    border-radius: 8px;
+    z-index: 100;
+    transition: top 0.15s;
+  }
+  .skip:focus {
+    top: 1rem;
+  }
+</style>

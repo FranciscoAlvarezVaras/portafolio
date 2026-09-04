@@ -1,0 +1,51 @@
+---
+import { type Lang, useTranslations, routes } from '../i18n/ui';
+import { stack } from '../data/profile';
+import Section from './Section.astro';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+---
+
+<Section id={routes[lang].anchors.stack} kicker={t('stack.kicker')} title={t('stack.title')}>
+  <div class="groups">
+    {stack.map((g) => (
+      <div class="group card">
+        <h3>{g.name[lang]}</h3>
+        <div class="chips">
+          {g.items.map((i) => <span class="chip">{i}</span>)}
+        </div>
+      </div>
+    ))}
+  </div>
+</Section>
+
+<style>
+  .groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+  .group {
+    padding: 1.1rem 1.25rem 1.25rem;
+    box-shadow: none;
+  }
+  h3 {
+    font-size: 0.85rem;
+    font-family: var(--mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 0.75rem;
+  }
+  .chips {
+    gap: 0.45rem;
+  }
+  .chip {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.65rem;
+  }
+</style>

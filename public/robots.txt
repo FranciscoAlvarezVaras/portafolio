@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://franciscoalvarez.dev/sitemap-index.xml

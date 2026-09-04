@@ -1,0 +1,47 @@
+---
+import { type Lang, useTranslations } from '../i18n/ui';
+import { contact } from '../data/profile';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const year = new Date().getFullYear();
+---
+
+<footer class="footer">
+  <div class="container inner">
+    <p>
+      © {year} {t('footer.rights')} · {t('footer.built')}
+      <a href={contact.siteRepo} rel="noopener" target="_blank">GitHub</a>.
+    </p>
+    <p class="links">
+      <a href={`mailto:${contact.email}`}>{contact.email}</a>
+      <a href={contact.linkedin} rel="noopener" target="_blank">LinkedIn</a>
+      <a href={contact.github} rel="noopener" target="_blank">GitHub</a>
+    </p>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem 0 2.5rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .inner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .inner p {
+    margin: 0;
+  }
+  .links {
+    display: flex;
+    gap: 1.25rem;
+  }
+</style>

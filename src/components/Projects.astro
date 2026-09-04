@@ -1,0 +1,28 @@
+---
+import { getCollection } from 'astro:content';
+import { type Lang, useTranslations, routes } from '../i18n/ui';
+import Section from './Section.astro';
+import ProjectCard from './ProjectCard.astro';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const all = await getCollection('projects', (e) => e.id.startsWith(`${lang}/`));
+const featured = all.filter((e) => e.data.featured).sort((a, b) => a.data.order - b.data.order);
+---
+
+<Section id={routes[lang].anchors.projects} kicker={t('projects.kicker')} title={t('projects.title')} intro={t('projects.intro')}>
+  <div class="grid">
+    {featured.map((entry) => <ProjectCard lang={lang} entry={entry} />)}
+  </div>
+</Section>
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.25rem;
+  }
+</style>

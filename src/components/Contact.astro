@@ -1,0 +1,49 @@
+---
+import { type Lang, useTranslations, routes } from '../i18n/ui';
+import { contact } from '../data/profile';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+---
+
+<section id={routes[lang].anchors.contact} class="section">
+  <div class="container">
+    <div class="box">
+      <p class="kicker">{t('contact.kicker')}</p>
+      <h2>{t('contact.title')}</h2>
+      <p class="lead">{t('contact.intro')}</p>
+      <div class="ctas">
+        <a class="btn btn-primary" href={`mailto:${contact.email}`}>{t('contact.email')}</a>
+        <a class="btn btn-secondary" href={contact.linkedin} rel="noopener" target="_blank">LinkedIn ↗</a>
+        <a class="btn btn-secondary" href={contact.github} rel="noopener" target="_blank">GitHub ↗</a>
+        <a class="btn btn-ghost" href={t('cv.file')} download>{t('contact.cv')}</a>
+      </div>
+      <p class="email"><a href={`mailto:${contact.email}`}>{contact.email}</a></p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: clamp(1.75rem, 5vw, 3.5rem);
+    box-shadow: var(--shadow);
+    background-image: radial-gradient(50% 60% at 100% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%);
+  }
+  .ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin: 1.25rem 0 1rem;
+  }
+  .email {
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    margin: 0;
+  }
+</style>

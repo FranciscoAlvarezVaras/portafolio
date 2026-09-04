@@ -1,0 +1,166 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { type Lang, useTranslations, routes, otherLang, projectUrl } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  entry: CollectionEntry<'projects'>;
+  /** slugs de otros proyectos para "más proyectos" */
+  others: { slug: string; title: string }[];
+}
+const { lang, entry, others } = Astro.props;
+const t = useTranslations(lang);
+const d = entry.data;
+const slug = entry.id.split('/').slice(1).join('/');
+const { Content } = await render(entry);
+const path = projectUrl(lang, slug);
+const altPath = projectUrl(otherLang(lang), slug);
+const catKey = `projects.category.${d.category}` as const;
+const linkLabels: Record<string, string> = {
+  repo: t('projects.link.repo'),
+  live: t('projects.link.live'),
+  dashboard: t('projects.link.dashboard'),
+  docs: t('projects.link.docs'),
+};
+const links = Object.entries(d.links).filter(([, v]) => !!v) as [string, string][];
+---
+
+<Base lang={lang} path={path} altPath={altPath} title={`${d.title} · Francisco Álvarez Varas`} description={d.summary} ogImage={d.image}>
+  <article class="project">
+    <header class="head">
+      <div class="container">
+        <a class="back" href={`${routes[lang].home}#${routes[lang].anchors.projects}`}>← {t('projects.back')}</a>
+        <p class="kicker">{t(catKey)} · {d.period}</p>
+        <h1>{d.title}</h1>
+        <p class="lead">{d.summary}</p>
+        <dl class="facts">
+          <div>
+            <dt>{t('projects.role')}</dt>
+            <dd>{d.role}</dd>
+          </div>
+          {d.team && (
+            <div>
+              <dt>{t('projects.team')}</dt>
+              <dd>{d.team}</dd>
+            </div>
+          )}
+          {d.result && (
+            <div>
+              <dt>{t('projects.result')}</dt>
+              <dd>{d.result}</dd>
+            </div>
+          )}
+        </dl>
+        <div class="chips">
+          {d.stack.map((s) => <span class="chip">{s}</span>)}
+        </div>
+        {links.length > 0 && (
+          <div class="links">
+            {links.map(([k, v]) => (
+              <a class="btn btn-secondary btn-sm" href={v} rel="noopener" target="_blank">
+                {linkLabels[k]} ↗
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </header>
+
+    {d.image && (
+      <div class="container">
+        <figure class="hero-img card">
+          <img src={d.image} alt={d.imageAlt ?? d.title} width="1200" height="675" />
+        </figure>
+      </div>
+    )}
+
+    <div class="container">
+      <div class="prose">
+        <Content />
+      </div>
+    </div>
+
+    <footer class="container more">
+      <h2>{t('projects.more')}</h2>
+      <ul>
+        {others.map((o) => (
+          <li><a href={projectUrl(lang, o.slug)}>{o.title}</a></li>
+        ))}
+      </ul>
+    </footer>
+  </article>
+</Base>
+
+<style>
+  .head {
+    padding: 3rem 0 2rem;
+    background:
+      radial-gradient(50% 50% at 90% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%);
+  }
+  .back {
+    display: inline-block;
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+  h1 {
+    max-width: 24ch;
+  }
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem 2.5rem;
+    margin: 1.5rem 0 1rem;
+  }
+  .facts div {
+    max-width: 34ch;
+  }
+  dt {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 0.2rem;
+  }
+  dd {
+    margin: 0;
+    font-size: 0.95rem;
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+  }
+  .hero-img {
+    margin: 0.5rem 0 2rem;
+    overflow: hidden;
+    padding: 0;
+  }
+  .hero-img img {
+    width: 100%;
+    height: auto;
+  }
+  .project :global(.prose) {
+    padding-bottom: 3rem;
+  }
+  .more {
+    border-top: 1px solid var(--border);
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+  }
+  .more h2 {
+    font-size: 1.1rem;
+  }
+  .more ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+  }
+</style>

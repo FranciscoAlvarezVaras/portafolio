@@ -1,0 +1,168 @@
+---
+import { type Lang, useTranslations, routes } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  altPath: string;
+}
+const { lang, altPath } = Astro.props;
+const t = useTranslations(lang);
+const home = routes[lang].home;
+const a = routes[lang].anchors;
+
+const items = [
+  { href: `${home}#${a.pipeline}`, label: t('nav.pipeline') },
+  { href: `${home}#${a.projects}`, label: t('nav.projects') },
+  { href: `${home}#${a.master}`, label: t('nav.master') },
+  { href: `${home}#${a.experience}`, label: t('nav.experience') },
+  { href: `${home}#${a.stack}`, label: t('nav.stack') },
+  { href: `${home}#${a.contact}`, label: t('nav.contact') },
+];
+---
+
+<header class="header">
+  <div class="container bar">
+    <a class="brand" href={home} aria-label="Francisco Álvarez Varas">
+      <span class="mono">FAV</span>
+      <span class="name">Francisco Álvarez Varas</span>
+    </a>
+
+    <button class="menu-btn" type="button" aria-expanded="false" aria-controls="nav" data-menu>
+      <span class="sr-only">{t('nav.menu')}</span>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M4 7h16M4 12h16M4 17h16" />
+      </svg>
+    </button>
+
+    <nav id="nav" class="nav" data-nav>
+      {items.map((it) => <a href={it.href}>{it.label}</a>)}
+      <a class="lang" href={altPath} hreflang={lang === 'es' ? 'en' : 'es'} lang={lang === 'es' ? 'en' : 'es'} title={t('nav.lang')}>
+        <span aria-hidden="true">{t('nav.langShort')}</span>
+        <span class="sr-only">{t('nav.lang')}</span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<script>
+  const btn = document.querySelector<HTMLButtonElement>('[data-menu]');
+  const nav = document.querySelector<HTMLElement>('[data-nav]');
+  if (btn && nav) {
+    btn.addEventListener('click', () => {
+      const open = nav.classList.toggle('open');
+      btn.setAttribute('aria-expanded', String(open));
+    });
+    nav.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).tagName === 'A') {
+        nav.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+</script>
+
+<style>
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    height: 64px;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--text);
+    font-weight: 600;
+  }
+  .brand:hover {
+    text-decoration: none;
+  }
+  .mono {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    background: var(--accent);
+    color: var(--accent-ink);
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+  }
+  .name {
+    font-size: 0.95rem;
+  }
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .nav a {
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 0.92rem;
+    padding: 0.45rem 0.7rem;
+    border-radius: 8px;
+  }
+  .nav a:hover {
+    color: var(--text);
+    background: var(--bg-2);
+    text-decoration: none;
+  }
+  .lang {
+    font-family: var(--mono);
+    border: 1px solid var(--border-strong);
+    margin-left: 0.5rem;
+    color: var(--text) !important;
+  }
+  .menu-btn {
+    display: none;
+    background: none;
+    border: 1px solid var(--border-strong);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 0.4rem;
+    cursor: pointer;
+  }
+  @media (max-width: 860px) {
+    .name {
+      display: none;
+    }
+    .menu-btn {
+      display: inline-flex;
+    }
+    .nav {
+      display: none;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 64px;
+      flex-direction: column;
+      align-items: stretch;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.25rem 1rem;
+      box-shadow: var(--shadow);
+    }
+    .nav.open {
+      display: flex;
+    }
+    .nav a {
+      padding: 0.7rem 0.5rem;
+      font-size: 1rem;
+    }
+    .lang {
+      margin-left: 0;
+      align-self: flex-start;
+    }
+  }
+</style>

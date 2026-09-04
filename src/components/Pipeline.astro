@@ -1,0 +1,740 @@
+---
+import { nodes, edges, canvas, layerNames, columnsX, type PipelineNode, type Layer } from '../data/pipeline';
+import { type Lang, useTranslations, projectUrl } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+
+const byId = new Map(nodes.map((n) => [n.id, n]));
+
+/** Curva entre columnas, o línea vertical si ambas piezas están en la misma columna. */
+function edgePath(a: PipelineNode, b: PipelineNode) {
+  if (Math.abs(a.x - b.x) < 1) {
+    return `M${a.x + a.w / 2},${a.y + a.h} L${b.x + b.w / 2},${b.y}`;
+  }
+  const x1 = a.x + a.w;
+  const y1 = a.y + a.h / 2;
+  const x2 = b.x;
+  const y2 = b.y + b.h / 2;
+  const mx = (x1 + x2) / 2;
+  return `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
+}
+
+/* Cabeceras de columna (las piezas transversales no llevan). */
+const columnLayers: Layer[] = ['sources', 'ingest', 'storage', 'transform', 'consume'];
+const columns = columnLayers.map((layer, i) => ({ layer, x: columnsX[i] }));
+
+/* Datos para el cliente: solo el idioma actual. */
+const clientData = {
+  nodes: nodes.map((n) => ({
+    id: n.id,
+    layer: n.layer,
+    label: n.label[lang],
+    tool: n.tool[lang],
+    tools: n.tools,
+    desc: n.desc[lang],
+    ifRemoved: n.ifRemoved[lang],
+    failure: n.failure,
+    controls: n.controls ?? [],
+    evidence: n.evidence.map((e) => ({ url: projectUrl(lang, e.project), title: e.title[lang], note: e.note[lang] })),
+  })),
+  edges,
+  ui: {
+    remove: t('pipeline.remove'),
+    restore: t('pipeline.restore'),
+    restoreAll: t('pipeline.restoreAll'),
+    tools: t('pipeline.tools'),
+    evidence: t('pipeline.evidence'),
+    whatBreaks: t('pipeline.whatBreaks'),
+    affected: t('pipeline.affected'),
+    removedCount: t('pipeline.removedCount'),
+    healthy: t('pipeline.healthy'),
+    hint: t('pipeline.hint'),
+    status: {
+      stale: t('pipeline.status.stale'),
+      dirty: t('pipeline.status.dirty'),
+      risk: t('pipeline.status.risk'),
+      removed: t('pipeline.status.removed'),
+      partial: lang === 'es' ? 'incompleto' : 'incomplete',
+    },
+  },
+};
+---
+
+<div class="pipeline" data-pipeline>
+  <div class="diagram-wrap">
+    <svg
+      class="diagram"
+      viewBox={`0 0 ${canvas.width} ${canvas.height}`}
+      role="group"
+      aria-label={t('pipeline.title')}
+    >
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="arrow-head" />
+        </marker>
+      </defs>
+
+      {columns.map((c) => (
+        <text class="col-label" x={c.x} y={100}>
+          {layerNames[c.layer][lang]}
+        </text>
+      ))}
+
+      <g class="edges">
+        {edges.map((e) => {
+          const a = byId.get(e.from)!;
+          const b = byId.get(e.to)!;
+          return <path class="edge" d={edgePath(a, b)} data-from={e.from} data-to={e.to} marker-end="url(#arrow)" />;
+        })}
+      </g>
+
+      <g class="nodes">
+        {nodes.map((n) => (
+          <g
+            class={`node layer-${n.layer}${n.layer === 'cross' ? ' bar' : ''}`}
+            data-id={n.id}
+            tabindex="0"
+            role="button"
+            aria-pressed="false"
+            aria-label={`${n.label[lang]} · ${n.tool[lang]}`}
+          >
+            <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="10" class="node-bg" />
+            <rect x={n.x} y={n.y} width={n.layer === 'cross' ? n.w : 5} height={n.layer === 'cross' ? 4 : n.h} rx={n.layer === 'cross' ? 2 : 3} class="node-accent" />
+            <foreignObject x={n.x} y={n.y} width={n.w} height={n.h}>
+              <div xmlns="http://www.w3.org/1999/xhtml" class="nd">
+                <span class="nd-label">{n.label[lang]}</span>
+                <span class="nd-tool">{n.tool[lang]}</span>
+                <span class="nd-badge" hidden></span>
+              </div>
+            </foreignObject>
+          </g>
+        ))}
+      </g>
+    </svg>
+  </div>
+
+  <aside class="panel card" data-panel aria-live="polite">
+    <p class="panel-hint">{t('pipeline.hint')}</p>
+    <p class="panel-healthy">{t('pipeline.healthy')}</p>
+    <noscript><p class="panel-hint">{t('pipeline.noscript')}</p></noscript>
+  </aside>
+
+  <ul class="legend" aria-label="Leyenda">
+    <li><span class="sw sw-removed"></span>{t('pipeline.legend.removed')}</li>
+    <li><span class="sw sw-stale"></span>{t('pipeline.legend.stale')}</li>
+    <li><span class="sw sw-partial"></span>{lang === 'es' ? 'Datos incompletos' : 'Incomplete data'}</li>
+    <li><span class="sw sw-dirty"></span>{t('pipeline.legend.dirty')}</li>
+    <li><span class="sw sw-risk"></span>{t('pipeline.legend.risk')}</li>
+  </ul>
+
+  <script type="application/json" data-pipeline-data set:html={JSON.stringify(clientData)} />
+</div>
+
+<script>
+  type Status = 'ok' | 'risk' | 'partial' | 'stale' | 'dirty';
+  type Failure = 'stops' | 'corrupts' | 'partial' | 'latent';
+  interface N {
+    id: string;
+    layer: string;
+    label: string;
+    tool: string;
+    tools: string[];
+    desc: string;
+    ifRemoved: string;
+    failure: Failure;
+    controls: string[];
+    evidence: { url: string; title: string; note: string }[];
+  }
+  interface Data {
+    nodes: N[];
+    edges: { from: string; to: string }[];
+    ui: Record<string, any>;
+  }
+
+  const RANK: Record<Status, number> = { ok: 0, risk: 1, partial: 2, stale: 3, dirty: 4 };
+  const EMIT: Record<Failure, Status> = { stops: 'stale', corrupts: 'dirty', partial: 'partial', latent: 'ok' };
+  const STATUSES: Status[] = ['risk', 'partial', 'stale', 'dirty'];
+
+  function init(root: HTMLElement) {
+    const data: Data = JSON.parse(root.querySelector('[data-pipeline-data]')!.textContent || '{}');
+    const byId = new Map(data.nodes.map((n) => [n.id, n]));
+    const panel = root.querySelector<HTMLElement>('[data-panel]')!;
+    const nodeEls = new Map<string, SVGGElement>();
+    root.querySelectorAll<SVGGElement>('.node').forEach((g) => nodeEls.set(g.dataset.id!, g));
+    const edgeEls = Array.from(root.querySelectorAll<SVGPathElement>('.edge'));
+
+    const removed = new Set<string>();
+    let selected: string | null = null;
+
+    /* ---------- modelo ---------- */
+    function compute(): Map<string, Status> {
+      const status = new Map<string, Status>(data.nodes.map((n) => [n.id, 'ok']));
+      const bump = (id: string, s: Status) => {
+        if (removed.has(id)) return;
+        if (RANK[s] > RANK[status.get(id)!]) status.set(id, s);
+      };
+      // Piezas transversales quitadas: las que controlan reciben un estado base.
+      for (const id of removed) {
+        const n = byId.get(id)!;
+        const s: Status = n.failure === 'latent' ? 'risk' : EMIT[n.failure];
+        for (const c of n.controls) bump(c, s);
+      }
+      const emitted = (id: string): Status => (removed.has(id) ? EMIT[byId.get(id)!.failure] : status.get(id)!);
+      // Propagación por el flujo de datos hasta punto fijo (el grafo es acíclico).
+      let changed = true;
+      let guard = 0;
+      while (changed && guard++ < 64) {
+        changed = false;
+        for (const n of data.nodes) {
+          if (removed.has(n.id)) continue;
+          const ins = data.edges.filter((e) => e.to === n.id).map((e) => emitted(e.from));
+          if (!ins.length) continue;
+          let derived: Status = 'ok';
+          if (ins.includes('dirty')) derived = 'dirty';
+          else if (ins.every((s) => s === 'stale')) derived = 'stale';
+          else if (ins.some((s) => s === 'stale' || s === 'partial')) derived = 'partial';
+          const cur = status.get(n.id)!;
+          if (RANK[derived] > RANK[cur]) {
+            status.set(n.id, derived);
+            changed = true;
+          }
+        }
+      }
+      return status;
+    }
+
+    /* ---------- vista ---------- */
+    function h(tag: string, attrs: Record<string, string> = {}, ...children: (string | Node)[]) {
+      const el = document.createElement(tag);
+      for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+      for (const c of children) el.append(c);
+      return el;
+    }
+
+    function render() {
+      const status = compute();
+      // nodos
+      for (const [id, g] of nodeEls) {
+        const s = removed.has(id) ? 'removed' : status.get(id)!;
+        g.classList.remove('is-removed', 'is-risk', 'is-partial', 'is-stale', 'is-dirty', 'is-selected', 'is-linked');
+        if (s !== 'ok') g.classList.add(`is-${s}`);
+        if (id === selected) g.classList.add('is-selected');
+        g.setAttribute('aria-pressed', String(id === selected));
+        const badge = g.querySelector<HTMLElement>('.nd-badge')!;
+        if (s === 'ok') badge.hidden = true;
+        else {
+          badge.hidden = false;
+          badge.textContent = data.ui.status[s];
+        }
+      }
+      if (selected) for (const c of byId.get(selected)!.controls) nodeEls.get(c)?.classList.add('is-linked');
+      // aristas
+      for (const e of edgeEls) {
+        const from = e.dataset.from!;
+        const s: Status = removed.has(from) ? EMIT[byId.get(from)!.failure] : status.get(from)!;
+        e.classList.remove('edge-partial', 'edge-stale', 'edge-dirty');
+        if (s === 'partial' || s === 'stale' || s === 'dirty') e.classList.add(`edge-${s}`);
+      }
+      renderPanel(status);
+    }
+
+    function renderPanel(status: Map<string, Status>) {
+      panel.replaceChildren();
+      const ui = data.ui;
+
+      if (removed.size) {
+        const bar = h('div', { class: 'panel-bar' });
+        bar.append(h('span', {}, `${removed.size} ${ui.removedCount}`));
+        const btn = h('button', { type: 'button', class: 'btn btn-secondary btn-sm' }, ui.restoreAll);
+        btn.addEventListener('click', () => {
+          removed.clear();
+          render();
+        });
+        bar.append(btn);
+        panel.append(bar);
+      }
+
+      if (!selected) {
+        panel.append(h('p', { class: 'panel-hint' }, ui.hint));
+        panel.append(h('p', { class: 'panel-healthy' }, removed.size ? '' : ui.healthy));
+        if (removed.size) appendAffected(status);
+        return;
+      }
+
+      const n = byId.get(selected)!;
+      const isRemoved = removed.has(n.id);
+      const s = isRemoved ? 'removed' : status.get(n.id)!;
+
+      const head = h('div', { class: 'panel-head' });
+      const titleWrap = h('div', {});
+      titleWrap.append(h('h3', { class: 'panel-title' }, n.label));
+      titleWrap.append(h('p', { class: 'panel-tool' }, n.tool));
+      head.append(titleWrap);
+      if (s !== 'ok') head.append(h('span', { class: `status status-${s}` }, ui.status[s]));
+      panel.append(head);
+
+      panel.append(h('p', { class: 'panel-desc' }, n.desc));
+
+      const chips = h('div', { class: 'chips' });
+      for (const tool of n.tools) chips.append(h('span', { class: 'chip' }, tool));
+      panel.append(h('p', { class: 'panel-label' }, ui.tools), chips);
+
+      if (n.evidence.length) {
+        panel.append(h('p', { class: 'panel-label' }, ui.evidence));
+        const ul = h('ul', { class: 'evidence' });
+        for (const e of n.evidence) {
+          const li = h('li', {});
+          li.append(h('a', { href: e.url }, e.title), h('span', {}, ` · ${e.note}`));
+          ul.append(li);
+        }
+        panel.append(ul);
+      }
+
+      const action = h('button', { type: 'button', class: `btn btn-sm ${isRemoved ? 'btn-secondary' : 'btn-primary'}` }, isRemoved ? ui.restore : ui.remove);
+      action.addEventListener('click', () => {
+        if (removed.has(n.id)) removed.delete(n.id);
+        else removed.add(n.id);
+        render();
+      });
+      panel.append(h('div', { class: 'panel-actions' }, action));
+
+      if (isRemoved) {
+        panel.append(h('p', { class: 'panel-label' }, ui.whatBreaks));
+        panel.append(h('p', { class: 'panel-break' }, n.ifRemoved));
+        appendAffected(status);
+      }
+    }
+
+    function appendAffected(status: Map<string, Status>) {
+      const affected = data.nodes
+        .filter((n) => !removed.has(n.id) && status.get(n.id) !== 'ok')
+        .sort((a, b) => RANK[status.get(b.id)!] - RANK[status.get(a.id)!]);
+      if (!affected.length) return;
+      panel.append(h('p', { class: 'panel-label' }, `${data.ui.affected} · ${affected.length}`));
+      const ul = h('ul', { class: 'affected' });
+      for (const n of affected) {
+        const s = status.get(n.id)!;
+        const li = h('li', {});
+        li.append(h('span', { class: `status status-${s}` }, data.ui.status[s]), h('span', {}, n.label));
+        li.addEventListener('click', () => {
+          selected = n.id;
+          render();
+        });
+        ul.append(li);
+      }
+      panel.append(ul);
+    }
+
+    /* ---------- eventos ---------- */
+    for (const [id, g] of nodeEls) {
+      const pick = () => {
+        selected = selected === id ? null : id;
+        render();
+      };
+      g.addEventListener('click', pick);
+      g.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          pick();
+        }
+      });
+    }
+
+    render();
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-pipeline]').forEach(init);
+</script>
+
+<style>
+  .pipeline {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 330px;
+    gap: 1.25rem;
+    align-items: start;
+  }
+  .diagram-wrap {
+    overflow-x: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.5rem;
+    box-shadow: var(--shadow);
+  }
+  .diagram {
+    min-width: 760px;
+    width: 100%;
+    height: auto;
+    font-family: var(--font);
+  }
+  .col-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    fill: var(--faint);
+  }
+
+  /* aristas */
+  .edge {
+    fill: none;
+    stroke: var(--border-strong);
+    stroke-width: 1.6;
+    transition: stroke 0.2s;
+  }
+  .arrow-head {
+    fill: var(--border-strong);
+  }
+  .edge-partial {
+    stroke: var(--navy);
+    stroke-dasharray: 6 4;
+    opacity: 0.55;
+  }
+  .edge-stale {
+    stroke: var(--faint);
+    stroke-dasharray: 3 5;
+  }
+  .edge-dirty {
+    stroke: var(--amber);
+    stroke-width: 2.2;
+  }
+
+  /* nodos */
+  .node {
+    cursor: pointer;
+    outline: none;
+  }
+  .node-bg {
+    fill: var(--bg);
+    stroke: var(--border);
+    stroke-width: 1;
+    transition:
+      stroke 0.15s,
+      fill 0.15s;
+  }
+  .node:hover .node-bg,
+  .node:focus-visible .node-bg {
+    stroke: var(--text);
+  }
+  .node.is-selected .node-bg {
+    stroke: var(--accent);
+    stroke-width: 2;
+    fill: var(--surface);
+  }
+  .node.is-linked .node-bg {
+    stroke: var(--accent);
+    stroke-dasharray: 4 3;
+  }
+  .node-accent {
+    fill: var(--navy);
+  }
+  .layer-sources .node-accent {
+    fill: var(--navy);
+  }
+  .layer-ingest .node-accent {
+    fill: var(--accent);
+  }
+  .layer-storage .node-accent {
+    fill: var(--amber);
+  }
+  .layer-transform .node-accent {
+    fill: var(--green);
+  }
+  .layer-consume .node-accent {
+    fill: #6d5bd0;
+  }
+  .layer-cross .node-accent {
+    fill: var(--faint);
+  }
+  .layer-cross .node-bg {
+    fill: var(--bg-2);
+  }
+  .nd {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    padding: 6px 10px 6px 14px;
+    line-height: 1.2;
+    position: relative;
+  }
+  .bar .nd {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+  }
+  .nd-label {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .nd-tool {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bar .nd-label {
+    white-space: nowrap;
+  }
+  .bar .nd-tool {
+    margin-left: auto;
+  }
+  .nd-badge {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .bar .nd-badge {
+    position: static;
+  }
+
+  /* estados */
+  .node.is-removed .node-bg {
+    fill: transparent;
+    stroke: var(--faint);
+    stroke-dasharray: 5 4;
+  }
+  .node.is-removed .node-accent {
+    fill: var(--faint);
+    opacity: 0.4;
+  }
+  .node.is-removed .nd-label,
+  .node.is-removed .nd-tool {
+    color: var(--faint);
+    text-decoration: line-through;
+  }
+  .node.is-removed .nd-badge {
+    background: var(--faint);
+    color: var(--bg);
+  }
+  .node.is-stale .node-bg {
+    fill: var(--bg-2);
+    stroke-dasharray: 3 3;
+  }
+  .node.is-stale .nd-label {
+    color: var(--muted);
+  }
+  .node.is-stale .nd-badge {
+    background: var(--border-strong);
+    color: var(--text);
+  }
+  .node.is-partial .node-bg {
+    fill: var(--navy-soft);
+  }
+  .node.is-partial .nd-badge {
+    background: var(--navy);
+    color: var(--bg);
+  }
+  .node.is-dirty .node-bg {
+    fill: var(--amber-soft);
+    stroke: var(--amber);
+  }
+  .node.is-dirty .nd-badge {
+    background: var(--amber);
+    color: #1e1b4b;
+  }
+  .node.is-risk .node-bg {
+    stroke: #6d5bd0;
+    stroke-dasharray: 2 3;
+  }
+  .node.is-risk .nd-badge {
+    background: #6d5bd0;
+    color: #fff;
+  }
+
+  /* panel */
+  .panel {
+    padding: 1.15rem 1.25rem 1.25rem;
+    min-height: 200px;
+    position: sticky;
+    top: 80px;
+    font-size: 0.93rem;
+  }
+  .panel :global(.panel-hint) {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--faint);
+    margin-bottom: 0.5rem;
+  }
+  .panel :global(.panel-healthy) {
+    color: var(--muted);
+    margin: 0;
+  }
+  .panel :global(.panel-bar) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .panel :global(.panel-head) {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+  .panel :global(.panel-title) {
+    font-size: 1.1rem;
+    margin: 0 0 0.15rem;
+  }
+  .panel :global(.panel-tool) {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin: 0;
+  }
+  .panel :global(.panel-desc) {
+    color: var(--text);
+    margin-bottom: 0.75rem;
+  }
+  .panel :global(.panel-label) {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 0.9rem 0 0.35rem;
+  }
+  .panel :global(.evidence) {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.35rem;
+    font-size: 0.88rem;
+    color: var(--muted);
+  }
+  .panel :global(.evidence a) {
+    font-weight: 600;
+  }
+  .panel :global(.panel-actions) {
+    margin-top: 1rem;
+  }
+  .panel :global(.panel-break) {
+    background: var(--accent-soft);
+    border-left: 3px solid var(--accent);
+    padding: 0.6rem 0.8rem;
+    border-radius: 0 8px 8px 0;
+    margin: 0;
+  }
+  .panel :global(.affected) {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.3rem;
+    font-size: 0.88rem;
+  }
+  .panel :global(.affected li) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+  .panel :global(.affected li:hover) {
+    color: var(--accent);
+  }
+  .panel :global(.status) {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .panel :global(.status-removed) {
+    background: var(--faint);
+    color: var(--bg);
+  }
+  .panel :global(.status-stale) {
+    background: var(--border-strong);
+    color: var(--text);
+  }
+  .panel :global(.status-partial) {
+    background: var(--navy);
+    color: var(--bg);
+  }
+  .panel :global(.status-dirty) {
+    background: var(--amber);
+    color: #1e1b4b;
+  }
+  .panel :global(.status-risk) {
+    background: #6d5bd0;
+    color: #fff;
+  }
+
+  /* leyenda */
+  .legend {
+    grid-column: 1 / -1;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  .legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+  .sw {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    border: 1px solid var(--border-strong);
+    background: var(--bg);
+  }
+  .sw-removed {
+    border-style: dashed;
+    border-color: var(--faint);
+  }
+  .sw-stale {
+    background: var(--bg-2);
+    border-style: dotted;
+  }
+  .sw-partial {
+    background: var(--navy-soft);
+  }
+  .sw-dirty {
+    background: var(--amber-soft);
+    border-color: var(--amber);
+  }
+  .sw-risk {
+    border-color: #6d5bd0;
+    border-style: dotted;
+  }
+
+  @media (max-width: 1180px) {
+    .pipeline {
+      grid-template-columns: 1fr;
+    }
+    .panel {
+      position: static;
+    }
+  }
+</style>
