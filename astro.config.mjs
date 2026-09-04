@@ -4,8 +4,8 @@ import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
 export default defineConfig({
-  // Cambia esto por tu dominio definitivo cuando lo compres (ej. https://franciscoalvarez.dev)
-  site: 'https://franciscoalvarez.dev',
+  // Dirección pública actual. Cambia esto (y public/robots.txt) por tu dominio propio cuando lo compres.
+  site: 'https://portafolio-sigma-mocha-57.vercel.app',
   trailingSlash: 'always',
   i18n: {
     defaultLocale: 'es',
