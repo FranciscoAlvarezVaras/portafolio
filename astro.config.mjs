@@ -4,8 +4,8 @@ import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
 export default defineConfig({
-  // Dirección pública actual. Cambia esto (y public/robots.txt) por tu dominio propio cuando lo compres.
-  site: 'https://portafolio-sigma-mocha-57.vercel.app',
+  // Dominio propio. Vercel usa la versión con www como principal y redirige la otra.
+  site: 'https://www.franciscoalvarez.dev',
   trailingSlash: 'always',
   i18n: {
     defaultLocale: 'es',
