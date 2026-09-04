@@ -390,7 +390,7 @@ const clientData = {
     fill: var(--border-strong);
   }
   .edge-partial {
-    stroke: var(--navy);
+    stroke: var(--blue);
     stroke-dasharray: 6 4;
     opacity: 0.55;
   }
@@ -399,7 +399,7 @@ const clientData = {
     stroke-dasharray: 3 5;
   }
   .edge-dirty {
-    stroke: var(--amber);
+    stroke: var(--accent);
     stroke-width: 2.2;
   }
 
@@ -430,22 +430,22 @@ const clientData = {
     stroke-dasharray: 4 3;
   }
   .node-accent {
-    fill: var(--navy);
+    fill: var(--ink);
   }
   .layer-sources .node-accent {
-    fill: var(--navy);
+    fill: var(--ink);
   }
   .layer-ingest .node-accent {
-    fill: var(--accent);
+    fill: var(--blue);
   }
   .layer-storage .node-accent {
-    fill: var(--amber);
+    fill: var(--border-strong);
   }
   .layer-transform .node-accent {
     fill: var(--green);
   }
   .layer-consume .node-accent {
-    fill: #6d5bd0;
+    fill: var(--accent);
   }
   .layer-cross .node-accent {
     fill: var(--faint);
@@ -534,27 +534,27 @@ const clientData = {
     color: var(--text);
   }
   .node.is-partial .node-bg {
-    fill: var(--navy-soft);
+    fill: var(--blue-soft);
   }
   .node.is-partial .nd-badge {
-    background: var(--navy);
-    color: var(--bg);
+    background: var(--blue);
+    color: #faf9f5;
   }
   .node.is-dirty .node-bg {
-    fill: var(--amber-soft);
-    stroke: var(--amber);
+    fill: var(--accent-soft);
+    stroke: var(--accent);
   }
   .node.is-dirty .nd-badge {
-    background: var(--amber);
-    color: #1e1b4b;
+    background: var(--accent);
+    color: #faf9f5;
   }
   .node.is-risk .node-bg {
-    stroke: #6d5bd0;
+    stroke: var(--ink);
     stroke-dasharray: 2 3;
   }
   .node.is-risk .nd-badge {
-    background: #6d5bd0;
-    color: #fff;
+    background: var(--ink);
+    color: #faf9f5;
   }
 
   /* panel */
@@ -673,16 +673,16 @@ const clientData = {
     color: var(--text);
   }
   .panel :global(.status-partial) {
-    background: var(--navy);
-    color: var(--bg);
+    background: var(--blue);
+    color: #faf9f5;
   }
   .panel :global(.status-dirty) {
-    background: var(--amber);
-    color: #1e1b4b;
+    background: var(--accent);
+    color: #faf9f5;
   }
   .panel :global(.status-risk) {
-    background: #6d5bd0;
-    color: #fff;
+    background: var(--ink);
+    color: #faf9f5;
   }
 
   /* leyenda */
@@ -718,14 +718,14 @@ const clientData = {
     border-style: dotted;
   }
   .sw-partial {
-    background: var(--navy-soft);
+    background: var(--blue-soft);
   }
   .sw-dirty {
-    background: var(--amber-soft);
-    border-color: var(--amber);
+    background: var(--accent-soft);
+    border-color: var(--accent);
   }
   .sw-risk {
-    border-color: #6d5bd0;
+    border-color: var(--ink);
     border-style: dotted;
   }
 
