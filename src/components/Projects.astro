@@ -1,25 +1,118 @@
 ---
+/**
+ * Rejilla de proyectos. Con `limit` muestra solo los destacados (portada);
+ * con `filters` añade los botones de filtro por tipo (página de proyectos).
+ */
 import { getCollection } from 'astro:content';
-import { type Lang, useTranslations, routes } from '../i18n/ui';
-import Section from './Section.astro';
+import { type Lang, useTranslations } from '../i18n/ui';
 import ProjectCard from './ProjectCard.astro';
 
 interface Props {
   lang: Lang;
+  limit?: number;
+  filters?: boolean;
 }
-const { lang } = Astro.props;
+const { lang, limit, filters = false } = Astro.props;
 const t = useTranslations(lang);
-const all = await getCollection('projects', (e) => e.id.startsWith(`${lang}/`));
-const featured = all.filter((e) => e.data.featured).sort((a, b) => a.data.order - b.data.order);
+
+const all = (await getCollection('projects', (e) => e.id.startsWith(`${lang}/`))).sort((a, b) => a.data.order - b.data.order);
+const list = limit ? all.filter((e) => e.data.featured).slice(0, limit) : all;
+const categories = ['analytics', 'engineering', 'product'] as const;
+const counts = Object.fromEntries(categories.map((c) => [c, all.filter((e) => e.data.category === c).length]));
 ---
 
-<Section id={routes[lang].anchors.projects} kicker={t('projects.kicker')} title={t('projects.title')} intro={t('projects.intro')}>
+<div class="projects" data-projects>
+  {filters && (
+    <div class="filters" role="group" aria-label={t('projects.filter')}>
+      <button type="button" class="chip-btn is-on" data-filter="all" aria-pressed="true">
+        {t('projects.all')} <span class="n">{all.length}</span>
+      </button>
+      {categories.map((c) => (
+        <button type="button" class="chip-btn" data-filter={c} aria-pressed="false">
+          {t(`projects.category.${c}` as const)} <span class="n">{counts[c]}</span>
+        </button>
+      ))}
+    </div>
+  )}
   <div class="grid">
-    {featured.map((entry) => <ProjectCard lang={lang} entry={entry} />)}
+    {list.map((entry, i) => (
+      <ProjectCard lang={lang} entry={entry} index={i} />
+    ))}
   </div>
-</Section>
+</div>
+
+<script>
+  function boot() {
+    document.querySelectorAll<HTMLElement>('[data-projects]:not([data-ready])').forEach((root) => {
+      root.dataset.ready = '1';
+      const buttons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-filter]'));
+      if (!buttons.length) return;
+      const cards = Array.from(root.querySelectorAll<HTMLElement>('[data-category]'));
+      for (const b of buttons) {
+        b.addEventListener('click', () => {
+          const f = b.dataset.filter!;
+          for (const x of buttons) {
+            const on = x === b;
+            x.classList.toggle('is-on', on);
+            x.setAttribute('aria-pressed', String(on));
+          }
+          let i = 0;
+          for (const c of cards) {
+            const show = f === 'all' || c.dataset.category === f;
+            c.hidden = !show;
+            if (show) {
+              c.style.setProperty('--i', String(i++));
+              c.classList.remove('in');
+              // relanza la aparición para que el filtro se note
+              requestAnimationFrame(() => requestAnimationFrame(() => c.classList.add('in')));
+            }
+          }
+        });
+      }
+    });
+  }
+  document.addEventListener('astro:page-load', boot);
+  boot();
+</script>
 
 <style>
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .chip-btn {
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 500;
+    padding: 0.42rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    transition:
+      background 0.15s,
+      border-color 0.15s,
+      color 0.15s;
+  }
+  .chip-btn:hover {
+    border-color: var(--accent);
+  }
+  .chip-btn.is-on {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #faf9f5;
+  }
+  .n {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    opacity: 0.7;
+  }
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));

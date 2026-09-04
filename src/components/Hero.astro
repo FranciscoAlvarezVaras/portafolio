@@ -7,21 +7,67 @@ interface Props {
 }
 const { lang } = Astro.props;
 const t = useTranslations(lang);
-const a = routes[lang].anchors;
+const r = routes[lang];
+const words = t('hero.name').split(' ');
+
+/* Trayectorias de "datos" que cruzan el fondo, en el lienzo 1600 × 900. */
+const streams = [
+  { d: 'M-50,620 C300,560 420,760 760,640 S1200,420 1650,520', c: 'blue', dur: 14 },
+  { d: 'M-50,300 C250,240 380,420 700,330 S1150,150 1650,260', c: 'accent', dur: 18 },
+  { d: 'M-50,760 C400,700 600,880 900,760 S1350,560 1650,700', c: 'green', dur: 22 },
+  { d: 'M200,-50 C260,250 120,420 380,600 S520,900 640,950', c: 'blue', dur: 20 },
+  { d: 'M1100,-50 C1180,200 980,330 1160,520 S1400,800 1300,950', c: 'accent', dur: 16 },
+];
+const dots = [
+  { x: 760, y: 640, c: 'blue', s: 0 },
+  { x: 700, y: 330, c: 'accent', s: 1.2 },
+  { x: 900, y: 760, c: 'green', s: 2.4 },
+  { x: 380, y: 600, c: 'blue', s: 0.6 },
+  { x: 1160, y: 520, c: 'accent', s: 1.8 },
+  { x: 1200, y: 420, c: 'green', s: 3 },
+];
 ---
 
-<section class="hero">
+<section class="hero" aria-label={t('hero.name')}>
+  <div class="scene" aria-hidden="true">
+    <svg class="field" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <pattern id="hero-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+          <circle cx="1" cy="1" r="1" class="grid-dot" />
+        </pattern>
+      </defs>
+      <rect width="1600" height="900" fill="url(#hero-grid)" />
+      {streams.map((s, i) => (
+        <path class={`stream stream-${s.c}`} d={s.d} style={`--dur:${s.dur}s; --delay:${-i * 3}s`} />
+      ))}
+      {dots.map((d) => (
+        <g class={`pulse pulse-${d.c}`} style={`--delay:${d.s}s`} transform={`translate(${d.x} ${d.y})`}>
+          <circle r="22" class="halo" />
+          <circle r="5" class="core" />
+        </g>
+      ))}
+    </svg>
+    <div class="orb orb-a"></div>
+    <div class="orb orb-b"></div>
+    <div class="vignette"></div>
+    <div class="grain"></div>
+  </div>
+
   <div class="container grid">
     <div class="copy">
-      <p class="status">
+      <p class="status reveal" style="--d: 0.15s">
         <span class="dot" aria-hidden="true"></span>
         {t('hero.status')} · {t('hero.location')}
       </p>
-      <p class="kicker">{t('hero.kicker')}</p>
-      <h1>{t('hero.name')}</h1>
-      <p class="pitch">{t('hero.pitch')}</p>
-      <div class="ctas">
-        <a class="btn btn-primary" href={`#${a.projects}`}>{t('hero.cta.projects')}</a>
+      <p class="kicker reveal" style="--d: 0.45s">{t('hero.kicker')}</p>
+      <h1>
+        {words.map((w, i) => (
+          <span class="w" style={`--d: ${0.7 + i * 0.14}s`}>{w}</span>
+        ))}
+      </h1>
+      <p class="pitch reveal" style="--d: 1.35s">{t('hero.pitch')}</p>
+      <div class="ctas reveal" style="--d: 1.7s">
+        <a class="btn btn-primary" href={r.projects}>{t('hero.cta.projects')}</a>
         <a class="btn btn-secondary" href={t('cv.file')} download>{t('hero.cta.cv')}</a>
         <a class="btn btn-ghost" href={contact.linkedin} rel="noopener" target="_blank">
           {t('hero.cta.linkedin')}
@@ -31,29 +77,212 @@ const a = routes[lang].anchors;
     </div>
 
     <ul class="facts" aria-label="Datos clave">
-      <li>
+      <li class="reveal" style="--d: 1.9s">
         <strong>{t('hero.fact1.k')}</strong>
         <span>{t('hero.fact1.v')}</span>
       </li>
-      <li>
+      <li class="reveal" style="--d: 2.05s">
         <strong>{t('hero.fact2.k')}</strong>
         <span>{t('hero.fact2.v')}</span>
       </li>
-      <li>
+      <li class="reveal" style="--d: 2.2s">
         <strong class="mono">{t('hero.fact3.k')}</strong>
         <span>{t('hero.fact3.v')}</span>
       </li>
     </ul>
   </div>
+
+  <a class="cue reveal" style="--d: 2.8s" href={`${r.home}#${lang === 'es' ? 'como-trabajo' : 'how-i-work'}`} aria-label={lang === 'es' ? 'Bajar' : 'Scroll down'}>
+    <span class="cue-line"></span>
+  </a>
 </section>
 
 <style>
   .hero {
-    padding-block: clamp(3.5rem, 9vw, 7rem) clamp(3rem, 7vw, 5rem);
-    background:
-      radial-gradient(60% 50% at 85% 10%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%),
-      radial-gradient(40% 40% at 10% 90%, color-mix(in srgb, var(--blue) 12%, transparent), transparent 70%);
+    position: relative;
+    overflow: hidden;
+    min-height: calc(100vh - 64px);
+    min-height: calc(100svh - 64px);
+    display: grid;
+    align-items: center;
+    padding-block: clamp(3rem, 8vw, 6rem) clamp(4rem, 8vw, 6rem);
+    background: var(--bg);
+    isolation: isolate;
   }
+
+  /* ---------- escena de fondo ---------- */
+  .scene {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+  }
+  .field {
+    position: absolute;
+    inset: -6%;
+    width: 112%;
+    height: 112%;
+    animation: kenburns 28s ease-in-out infinite alternate;
+    transform-origin: 55% 45%;
+  }
+  .grid-dot {
+    fill: var(--border-strong);
+    opacity: 0.55;
+  }
+  .stream {
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-dasharray: 18 26;
+    opacity: 0.55;
+    animation: dash var(--dur) linear infinite;
+    animation-delay: var(--delay);
+  }
+  .stream-blue {
+    stroke: var(--blue);
+  }
+  .stream-accent {
+    stroke: var(--accent);
+  }
+  .stream-green {
+    stroke: var(--green);
+  }
+  .pulse .halo {
+    fill: currentColor;
+    opacity: 0;
+    animation: halo 4.5s ease-out infinite;
+    animation-delay: var(--delay);
+    transform-origin: center;
+  }
+  .pulse .core {
+    fill: currentColor;
+    opacity: 0.9;
+  }
+  .pulse-blue {
+    color: var(--blue);
+  }
+  .pulse-accent {
+    color: var(--accent);
+  }
+  .pulse-green {
+    color: var(--green);
+  }
+  .orb {
+    position: absolute;
+    width: 46vw;
+    height: 46vw;
+    max-width: 640px;
+    max-height: 640px;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.55;
+    animation: drift 22s ease-in-out infinite alternate;
+  }
+  .orb-a {
+    top: -18%;
+    right: -8%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 40%, transparent), transparent 65%);
+  }
+  .orb-b {
+    bottom: -25%;
+    left: -10%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--blue) 38%, transparent), transparent 65%);
+    animation-delay: -9s;
+    animation-duration: 26s;
+  }
+  .vignette {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(120% 90% at 50% 45%, transparent 55%, color-mix(in srgb, var(--bg) 85%, transparent) 100%),
+      linear-gradient(to bottom, transparent 70%, var(--bg) 100%);
+  }
+  .grain {
+    position: absolute;
+    inset: 0;
+    opacity: 0.16;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.2  0 0 0 0 0.2  0 0 0 0 0.18  0 0 0 0.35 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    background-size: 220px 220px;
+    animation: grain 0.9s steps(4) infinite;
+  }
+
+  @keyframes kenburns {
+    from {
+      transform: scale(1) translate(0, 0);
+    }
+    to {
+      transform: scale(1.09) translate(-1.5%, 1%);
+    }
+  }
+  @keyframes dash {
+    to {
+      stroke-dashoffset: -880;
+    }
+  }
+  @keyframes halo {
+    0% {
+      transform: scale(0.2);
+      opacity: 0.5;
+    }
+    70% {
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1.4);
+      opacity: 0;
+    }
+  }
+  @keyframes drift {
+    from {
+      transform: translate(0, 0) scale(1);
+    }
+    to {
+      transform: translate(6%, 8%) scale(1.12);
+    }
+  }
+  @keyframes grain {
+    0% {
+      background-position: 0 0;
+    }
+    25% {
+      background-position: -60px 40px;
+    }
+    50% {
+      background-position: 40px -70px;
+    }
+    75% {
+      background-position: -30px -30px;
+    }
+    100% {
+      background-position: 0 0;
+    }
+  }
+
+  /* ---------- texto por planos ---------- */
+  .reveal,
+  .w {
+    animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: var(--d, 0s);
+  }
+  .w {
+    display: inline-block;
+    margin-right: 0.28em;
+    clip-path: inset(0 0 -0.2em 0);
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(22px);
+      filter: blur(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+      filter: blur(0);
+    }
+  }
+
   .grid {
     display: grid;
     grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
@@ -66,11 +295,12 @@ const a = routes[lang].anchors;
     gap: 0.5rem;
     font-size: 0.85rem;
     color: var(--muted);
-    background: var(--surface);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
     border: 1px solid var(--border);
     padding: 0.3rem 0.75rem 0.3rem 0.6rem;
     border-radius: 999px;
     margin-bottom: 1.25rem;
+    backdrop-filter: blur(6px);
   }
   .dot {
     width: 8px;
@@ -78,9 +308,21 @@ const a = routes[lang].anchors;
     border-radius: 50%;
     background: var(--green);
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 25%, transparent);
+    animation: blink 2.4s ease-in-out infinite;
+  }
+  @keyframes blink {
+    0%,
+    100% {
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 25%, transparent);
+    }
+    50% {
+      box-shadow: 0 0 0 8px color-mix(in srgb, var(--green) 8%, transparent);
+    }
   }
   h1 {
     margin-bottom: 1rem;
+    font-size: clamp(2.4rem, 6vw, 4.2rem);
+    line-height: 1.02;
   }
   .pitch {
     font-size: 1.15rem;
@@ -101,13 +343,14 @@ const a = routes[lang].anchors;
     gap: 0.75rem;
   }
   .facts li {
-    background: var(--surface);
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 1rem 1.15rem;
     display: grid;
     gap: 0.15rem;
     box-shadow: var(--shadow);
+    backdrop-filter: blur(8px);
   }
   .facts strong {
     font-size: 1.35rem;
@@ -122,12 +365,73 @@ const a = routes[lang].anchors;
     color: var(--muted);
     font-size: 0.92rem;
   }
+
+  /* ---------- indicador de scroll ---------- */
+  .cue {
+    position: absolute;
+    left: 50%;
+    bottom: 1.25rem;
+    transform: translateX(-50%);
+    width: 26px;
+    height: 42px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 14px;
+    display: grid;
+    justify-content: center;
+    padding-top: 7px;
+  }
+  .cue-line {
+    width: 3px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--accent);
+    animation: cue 1.8s ease-in-out infinite;
+  }
+  @keyframes cue {
+    0% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    70% {
+      transform: translateY(14px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 0;
+    }
+  }
+
   @media (max-width: 860px) {
+    .hero {
+      min-height: 0;
+    }
     .grid {
       grid-template-columns: 1fr;
     }
     .facts {
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+    .cue {
+      display: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .field,
+    .orb,
+    .grain,
+    .stream,
+    .pulse .halo,
+    .dot,
+    .cue-line {
+      animation: none !important;
+    }
+    .reveal,
+    .w {
+      animation: none;
+      opacity: 1;
+      transform: none;
+      filter: none;
     }
   }
 </style>

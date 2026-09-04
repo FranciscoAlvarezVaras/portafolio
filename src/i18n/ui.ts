@@ -6,11 +6,15 @@ export function isLang(x: string | undefined): x is Lang {
   return x === 'es' || x === 'en';
 }
 
-/** Rutas por idioma. La home lleva ancla de sección; los proyectos, su carpeta. */
+/** Rutas por idioma: páginas del sitio y anclas de sección dentro de ellas. */
 export const routes = {
   es: {
     home: '/es/',
+    pipeline: '/es/pipeline/',
     projects: '/es/proyectos/',
+    master: '/es/master/',
+    about: '/es/sobre-mi/',
+    contact: '/es/sobre-mi/#contacto',
     anchors: {
       pipeline: 'pipeline',
       projects: 'proyectos',
@@ -23,7 +27,11 @@ export const routes = {
   },
   en: {
     home: '/en/',
+    pipeline: '/en/pipeline/',
     projects: '/en/projects/',
+    master: '/en/masters/',
+    about: '/en/about/',
+    contact: '/en/about/#contact',
     anchors: {
       pipeline: 'pipeline',
       projects: 'projects',
@@ -35,6 +43,8 @@ export const routes = {
     },
   },
 } as const;
+
+export type PageKey = 'home' | 'pipeline' | 'projects' | 'master' | 'about';
 
 export function projectUrl(lang: Lang, slug: string) {
   return `${routes[lang].projects}${slug}/`;
@@ -49,13 +59,17 @@ export const ui = {
     'meta.title': 'Francisco Álvarez Varas · Analytics Engineer',
     'meta.description':
       'Analytics Engineer y Data Analyst en Valencia. Modelado de datos con SQL y dbt, pipelines en Google Cloud y dashboards que la gente de negocio usa de verdad.',
+    'meta.pipeline': 'Cómo trabajo · pipeline end-to-end interactivo',
+    'meta.projects': 'Proyectos · casos de analítica e ingeniería de datos',
+    'meta.master': 'Máster Big Data & Cloud · EDEM 2025-2026',
+    'meta.about': 'Sobre mí · experiencia, stack y formación',
+
+    'nav.home': 'Inicio',
     'nav.pipeline': 'Cómo trabajo',
     'nav.projects': 'Proyectos',
     'nav.master': 'Máster',
-    'nav.experience': 'Experiencia',
-    'nav.stack': 'Stack',
-    'nav.education': 'Formación',
-    'nav.contact': 'Contacto',
+    'nav.about': 'Sobre mí',
+    'nav.contact': 'Hablemos',
     'nav.lang': 'English',
     'nav.langShort': 'EN',
     'nav.menu': 'Menú',
@@ -76,11 +90,36 @@ export const ui = {
     'hero.fact3.k': 'GCP · BigQuery · dbt',
     'hero.fact3.v': 'stack principal, con Terraform y CI/CD',
 
+    'home.pipeline.kicker': 'Cómo trabajo',
+    'home.pipeline.title': 'Así construyo un pipeline de datos',
+    'home.pipeline.intro':
+      'De las fuentes al dashboard, con calidad, orquestación e infraestructura como código. En la versión interactiva puedes quitar cualquier pieza y ver qué se rompe aguas abajo.',
+    'home.pipeline.cta': 'Explorar el pipeline interactivo',
+    'home.pipeline.badge': 'Interactivo',
+    'home.projects.cta': 'Ver los 7 proyectos',
+    'home.master.kicker': 'Máster Big Data & Cloud · EDEM',
+    'home.master.title': 'Un año construyendo, de Docker a Vertex AI',
+    'home.master.intro': 'Tres Data Projects en equipo, un hackathon, un TFM con empresa real y prácticas en cada módulo.',
+    'home.master.cta': 'Ver el recorrido del máster',
+    'home.master.s1.k': '3',
+    'home.master.s1.v': 'Data Projects en equipo',
+    'home.master.s2.k': '1',
+    'home.master.s2.v': 'TFM con empresa real',
+    'home.master.s3.k': '12',
+    'home.master.s3.v': 'módulos con práctica',
+
     'pipeline.kicker': 'Cómo trabajo',
     'pipeline.title': 'Un pipeline de datos end-to-end, pieza a pieza',
     'pipeline.intro':
       'Esta es la arquitectura que aplico en mis proyectos: de las fuentes al dashboard, con calidad, orquestación e infraestructura como código. Pulsa una pieza para ver qué hace y dónde la he construido. Y quítala para ver qué se rompe aguas abajo.',
     'pipeline.hint': 'Pulsa una pieza · Quítala con el botón del panel',
+    'pipeline.scenarios': 'Prueba un escenario',
+    'pipeline.scenario.orchestration': '¿Y si falla la orquestación?',
+    'pipeline.scenario.quality': '¿Y si no hay tests de calidad?',
+    'pipeline.scenario.silver': '¿Y si saltamos la capa silver?',
+    'pipeline.scenario.iac': '¿Y si no hay Terraform?',
+    'pipeline.tour': 'Recorrido guiado',
+    'pipeline.tourStop': 'Parar el recorrido',
     'pipeline.remove': 'Quitar esta pieza',
     'pipeline.restore': 'Devolver la pieza',
     'pipeline.restoreAll': 'Restaurar todo',
@@ -90,20 +129,28 @@ export const ui = {
     'pipeline.affected': 'Piezas afectadas',
     'pipeline.removedCount': 'piezas quitadas',
     'pipeline.legend.stale': 'Sin datos o desactualizado',
+    'pipeline.legend.partial': 'Datos incompletos',
     'pipeline.legend.dirty': 'Datos no fiables',
     'pipeline.legend.risk': 'Riesgo latente',
     'pipeline.legend.removed': 'Pieza quitada',
     'pipeline.status.stale': 'sin datos',
+    'pipeline.status.partial': 'incompleto',
     'pipeline.status.dirty': 'no fiable',
     'pipeline.status.risk': 'riesgo',
     'pipeline.status.removed': 'quitada',
     'pipeline.healthy': 'Todo el pipeline está en pie. Quita una pieza para ver su efecto.',
     'pipeline.noscript': 'El diagrama es interactivo con JavaScript activado. Sin él, esta es la vista estática.',
+    'pipeline.svgLabel': 'Diagrama de un pipeline de datos end-to-end',
 
-    'projects.kicker': 'Proyectos destacados',
+    'projects.kicker': 'Proyectos',
     'projects.title': 'Casos, no solo repositorios',
     'projects.intro':
       'Cada ficha cuenta el contexto, el problema, lo que hice yo y el resultado. Con enlaces al código y a las demos cuando existen.',
+    'projects.featured.kicker': 'Proyectos destacados',
+    'projects.featured.title': 'Tres casos para empezar',
+    'projects.filter': 'Filtrar por tipo',
+    'projects.all': 'Todos',
+    'projects.count': 'proyectos',
     'projects.viewCase': 'Ver el caso',
     'projects.role': 'Mi rol',
     'projects.result': 'Resultado',
@@ -131,8 +178,13 @@ export const ui = {
     'master.private': 'privado',
     'master.viewRepo': 'Ver repo',
 
+    'about.kicker': 'Sobre mí',
+    'about.title': 'De optimizar páginas a medir el negocio',
+    'about.intro':
+      'Empecé en SEO técnico pensando que mi trabajo era hacer que Google entendiera mis páginas. Acabé escribiendo pipelines en Python para extraer datos de la API de Search Console, modelando experimentos y publicando dashboards. Esa transición, de optimizar páginas a diseñar la infraestructura que las mide, es lo que me llevó al máster en Big Data & Cloud. Antes de los datos hubo ocho años de marketing, investigación de mercados y auditoría, y de ahí viene el criterio de negocio que aplico a cada modelo.',
+
     'experience.kicker': 'Experiencia',
-    'experience.title': 'De optimizar páginas a medir el negocio',
+    'experience.title': 'Puestos de datos',
     'experience.before': 'Antes de los datos',
     'experience.before.intro':
       'Ocho años en marketing, investigación de mercados y administración en manufactura, hotelería, consumo masivo y servicios financieros. De ahí viene el criterio de negocio que aplico a los datos.',
@@ -160,13 +212,17 @@ export const ui = {
     'meta.title': 'Francisco Álvarez Varas · Analytics Engineer',
     'meta.description':
       'Analytics Engineer and Data Analyst based in Valencia, Spain. Data modelling with SQL and dbt, pipelines on Google Cloud and dashboards business people actually use.',
+    'meta.pipeline': 'How I work · interactive end-to-end pipeline',
+    'meta.projects': 'Projects · analytics and data engineering case studies',
+    'meta.master': "Master's in Big Data & Cloud · EDEM 2025-2026",
+    'meta.about': 'About · experience, stack and education',
+
+    'nav.home': 'Home',
     'nav.pipeline': 'How I work',
     'nav.projects': 'Projects',
     'nav.master': "Master's",
-    'nav.experience': 'Experience',
-    'nav.stack': 'Stack',
-    'nav.education': 'Education',
-    'nav.contact': 'Contact',
+    'nav.about': 'About',
+    'nav.contact': "Let's talk",
     'nav.lang': 'Español',
     'nav.langShort': 'ES',
     'nav.menu': 'Menu',
@@ -187,11 +243,36 @@ export const ui = {
     'hero.fact3.k': 'GCP · BigQuery · dbt',
     'hero.fact3.v': 'core stack, with Terraform and CI/CD',
 
+    'home.pipeline.kicker': 'How I work',
+    'home.pipeline.title': 'This is how I build a data pipeline',
+    'home.pipeline.intro':
+      'From sources to dashboard, with data quality, orchestration and infrastructure as code. In the interactive version you can remove any piece and watch what breaks downstream.',
+    'home.pipeline.cta': 'Explore the interactive pipeline',
+    'home.pipeline.badge': 'Interactive',
+    'home.projects.cta': 'See all 7 projects',
+    'home.master.kicker': "Master's in Big Data & Cloud · EDEM",
+    'home.master.title': 'A year of building, from Docker to Vertex AI',
+    'home.master.intro': 'Three team Data Projects, a hackathon, a thesis with a real company and hands-on practice in every module.',
+    'home.master.cta': "See the master's journey",
+    'home.master.s1.k': '3',
+    'home.master.s1.v': 'team Data Projects',
+    'home.master.s2.k': '1',
+    'home.master.s2.v': 'thesis with a real company',
+    'home.master.s3.k': '12',
+    'home.master.s3.v': 'modules with practice',
+
     'pipeline.kicker': 'How I work',
     'pipeline.title': 'An end-to-end data pipeline, piece by piece',
     'pipeline.intro':
       'This is the architecture I apply in my projects: from sources to dashboard, with data quality, orchestration and infrastructure as code. Click a piece to see what it does and where I have built it. Then remove it to see what breaks downstream.',
     'pipeline.hint': 'Click a piece · Remove it from the panel',
+    'pipeline.scenarios': 'Try a scenario',
+    'pipeline.scenario.orchestration': 'What if orchestration fails?',
+    'pipeline.scenario.quality': 'What if there are no quality tests?',
+    'pipeline.scenario.silver': 'What if we skip the silver layer?',
+    'pipeline.scenario.iac': 'What if there is no Terraform?',
+    'pipeline.tour': 'Guided tour',
+    'pipeline.tourStop': 'Stop the tour',
     'pipeline.remove': 'Remove this piece',
     'pipeline.restore': 'Put the piece back',
     'pipeline.restoreAll': 'Restore everything',
@@ -201,20 +282,28 @@ export const ui = {
     'pipeline.affected': 'Affected pieces',
     'pipeline.removedCount': 'pieces removed',
     'pipeline.legend.stale': 'No data or stale',
+    'pipeline.legend.partial': 'Incomplete data',
     'pipeline.legend.dirty': 'Unreliable data',
     'pipeline.legend.risk': 'Latent risk',
     'pipeline.legend.removed': 'Removed piece',
     'pipeline.status.stale': 'no data',
+    'pipeline.status.partial': 'incomplete',
     'pipeline.status.dirty': 'unreliable',
     'pipeline.status.risk': 'at risk',
     'pipeline.status.removed': 'removed',
     'pipeline.healthy': 'The whole pipeline is up. Remove a piece to see its effect.',
     'pipeline.noscript': 'The diagram is interactive with JavaScript enabled. Without it, this is the static view.',
+    'pipeline.svgLabel': 'Diagram of an end-to-end data pipeline',
 
-    'projects.kicker': 'Selected projects',
+    'projects.kicker': 'Projects',
     'projects.title': 'Case studies, not just repositories',
     'projects.intro':
       'Each case covers the context, the problem, what I did and the outcome. With links to code and demos where they exist.',
+    'projects.featured.kicker': 'Selected projects',
+    'projects.featured.title': 'Three cases to start with',
+    'projects.filter': 'Filter by type',
+    'projects.all': 'All',
+    'projects.count': 'projects',
     'projects.viewCase': 'Read the case',
     'projects.role': 'My role',
     'projects.result': 'Outcome',
@@ -242,8 +331,13 @@ export const ui = {
     'master.private': 'private',
     'master.viewRepo': 'View repo',
 
+    'about.kicker': 'About',
+    'about.title': 'From optimising pages to measuring the business',
+    'about.intro':
+      "I started in technical SEO thinking my job was to make Google understand my pages. I ended up writing Python pipelines to pull data from the Search Console API, modelling experiments and publishing dashboards. That shift, from optimising pages to designing the infrastructure that measures them, is what took me to the master's in Big Data & Cloud. Before data there were eight years of marketing, market research and auditing, and that is where the business judgement I bring to every model comes from.",
+
     'experience.kicker': 'Experience',
-    'experience.title': 'From optimising pages to measuring the business',
+    'experience.title': 'Data roles',
     'experience.before': 'Before data',
     'experience.before.intro':
       'Eight years in marketing, market research and administration across manufacturing, hospitality, consumer goods and financial services. That is where the business judgement I bring to data comes from.',

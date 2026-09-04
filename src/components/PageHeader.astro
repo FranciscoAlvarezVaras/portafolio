@@ -1,0 +1,32 @@
+---
+interface Props {
+  kicker: string;
+  title: string;
+  intro?: string;
+}
+const { kicker, title, intro } = Astro.props;
+---
+
+<header class="page-head">
+  <div class="container">
+    <p class="kicker">{kicker}</p>
+    <h1>{title}</h1>
+    {intro && <p class="lead">{intro}</p>}
+    <slot />
+  </div>
+</header>
+
+<style>
+  .page-head {
+    padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(1.5rem, 4vw, 2.5rem);
+    background:
+      radial-gradient(50% 60% at 95% 0%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 70%),
+      radial-gradient(35% 50% at 5% 100%, color-mix(in srgb, var(--blue) 8%, transparent), transparent 70%);
+  }
+  h1 {
+    max-width: 22ch;
+  }
+  .lead {
+    font-size: 1.12rem;
+  }
+</style>

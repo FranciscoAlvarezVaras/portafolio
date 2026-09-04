@@ -1,0 +1,24 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHeader from './PageHeader.astro';
+import Experience from './Experience.astro';
+import Stack from './Stack.astro';
+import Education from './Education.astro';
+import Contact from './Contact.astro';
+import { type Lang, useTranslations, routes, otherLang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const r = routes[lang];
+---
+
+<Base lang={lang} path={r.about} altPath={routes[otherLang(lang)].about} title={`${t('meta.about')} · Francisco Álvarez Varas`} description={t('about.intro')}>
+  <PageHeader kicker={t('about.kicker')} title={t('about.title')} intro={t('about.intro')} />
+  <Experience lang={lang} />
+  <Stack lang={lang} />
+  <Education lang={lang} />
+  <Contact lang={lang} />
+</Base>

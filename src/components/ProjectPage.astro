@@ -31,7 +31,7 @@ const links = Object.entries(d.links).filter(([, v]) => !!v) as [string, string]
   <article class="project">
     <header class="head">
       <div class="container">
-        <a class="back" href={`${routes[lang].home}#${routes[lang].anchors.projects}`}>← {t('projects.back')}</a>
+        <a class="back" href={routes[lang].projects}>← {t('projects.back')}</a>
         <p class="kicker">{t(catKey)} · {d.period}</p>
         <h1>{d.title}</h1>
         <p class="lead">{d.summary}</p>

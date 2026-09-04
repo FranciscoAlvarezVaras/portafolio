@@ -5,8 +5,9 @@ import { type Lang, useTranslations, projectUrl } from '../i18n/ui';
 interface Props {
   lang: Lang;
   entry: CollectionEntry<'projects'>;
+  index?: number;
 }
-const { lang, entry } = Astro.props;
+const { lang, entry, index = 0 } = Astro.props;
 const t = useTranslations(lang);
 const d = entry.data;
 const slug = entry.id.split('/').slice(1).join('/');
@@ -14,7 +15,7 @@ const url = projectUrl(lang, slug);
 const catKey = `projects.category.${d.category}` as const;
 ---
 
-<article class={`pcard card cat-${d.category}`}>
+<article class={`pcard card cat-${d.category}`} data-category={d.category} data-reveal style={`--i: ${index}`}>
   <a class="media" href={url} aria-hidden="true" tabindex="-1">
     {d.image ? <img src={d.image} alt="" loading="lazy" width="640" height="360" /> : <div class="placeholder"><span>{d.stack.slice(0, 3).join(' · ')}</span></div>}
   </a>
@@ -41,11 +42,12 @@ const catKey = `projects.category.${d.category}` as const;
     flex-direction: column;
     overflow: hidden;
     transition:
-      transform 0.15s ease,
-      box-shadow 0.15s ease;
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
   }
   .pcard:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    box-shadow: 0 2px 4px rgba(20, 20, 19, 0.05), 0 18px 36px -16px rgba(20, 20, 19, 0.22);
   }
   .media {
     display: block;
@@ -58,6 +60,10 @@ const catKey = `projects.category.${d.category}` as const;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.6s ease;
+  }
+  .pcard:hover .media img {
+    transform: scale(1.04);
   }
   .placeholder {
     height: 100%;
@@ -67,12 +73,12 @@ const catKey = `projects.category.${d.category}` as const;
     font-size: 0.85rem;
     color: var(--muted);
     background:
-      linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, transparent), transparent 60%),
+      linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, transparent), transparent 60%),
       repeating-linear-gradient(45deg, transparent 0 14px, color-mix(in srgb, var(--border) 60%, transparent) 14px 15px);
   }
   .cat-analytics .placeholder {
     background:
-      linear-gradient(135deg, color-mix(in srgb, var(--green) 14%, transparent), transparent 60%),
+      linear-gradient(135deg, color-mix(in srgb, var(--green) 16%, transparent), transparent 60%),
       repeating-linear-gradient(45deg, transparent 0 14px, color-mix(in srgb, var(--border) 60%, transparent) 14px 15px);
   }
   .body {
@@ -94,10 +100,13 @@ const catKey = `projects.category.${d.category}` as const;
     margin: 0;
   }
   .cat {
-    color: var(--accent);
+    color: var(--accent-text);
   }
   .cat-analytics .cat {
     color: var(--green);
+  }
+  .cat-engineering .cat {
+    color: var(--blue);
   }
   h3 {
     font-size: 1.15rem;

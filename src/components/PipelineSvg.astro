@@ -1,0 +1,327 @@
+---
+/**
+ * Dibujo SVG del pipeline. Sin lógica: la interactividad la añade Pipeline.astro.
+ * Con `interactive={false}` se usa como anticipo animado en la portada.
+ */
+import { nodes, edges, canvas, layerNames, columnsX, type PipelineNode, type Layer } from '../data/pipeline';
+import type { Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  interactive?: boolean;
+  /** Prefijo para los ids internos del SVG (deben ser únicos por página). */
+  idPrefix?: string;
+  label: string;
+}
+const { lang, interactive = true, idPrefix = 'p', label } = Astro.props;
+
+const byId = new Map(nodes.map((n) => [n.id, n]));
+
+/** Curva entre columnas, o línea vertical si ambas piezas están en la misma columna. */
+function edgePath(a: PipelineNode, b: PipelineNode) {
+  if (Math.abs(a.x - b.x) < 1) {
+    return `M${a.x + a.w / 2},${a.y + a.h} L${b.x + b.w / 2},${b.y}`;
+  }
+  const x1 = a.x + a.w;
+  const y1 = a.y + a.h / 2;
+  const x2 = b.x;
+  const y2 = b.y + b.h / 2;
+  const mx = (x1 + x2) / 2;
+  return `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
+}
+
+const columnLayers: Layer[] = ['sources', 'ingest', 'storage', 'transform', 'consume'];
+const columns = columnLayers.map((layer, i) => ({ layer, x: columnsX[i] }));
+const edgeId = (from: string, to: string) => `${idPrefix}-e-${from}-${to}`;
+---
+
+<svg
+  class={`diagram${interactive ? '' : ' static'}`}
+  viewBox={`0 0 ${canvas.width} ${canvas.height}`}
+  role={interactive ? 'group' : 'img'}
+  aria-label={label}
+>
+  <defs>
+    <marker id={`${idPrefix}-arrow`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="arrow-head" />
+    </marker>
+  </defs>
+
+  {columns.map((c) => (
+    <text class="col-label" x={c.x} y={100}>
+      {layerNames[c.layer][lang]}
+    </text>
+  ))}
+
+  <g class="edges">
+    {edges.map((e) => {
+      const a = byId.get(e.from)!;
+      const b = byId.get(e.to)!;
+      return (
+        <path
+          id={edgeId(e.from, e.to)}
+          class="edge"
+          d={edgePath(a, b)}
+          data-from={e.from}
+          data-to={e.to}
+          marker-end={`url(#${idPrefix}-arrow)`}
+        />
+      );
+    })}
+  </g>
+
+  <g class="flows" aria-hidden="true">
+    {edges.map((e, i) => (
+      <circle class="flow" r="3.6" data-from={e.from} data-to={e.to}>
+        <animateMotion dur={`${2.8 + (i % 4) * 0.35}s`} begin={`${-(i * 0.55)}s`} repeatCount="indefinite">
+          <mpath href={`#${edgeId(e.from, e.to)}`} />
+        </animateMotion>
+      </circle>
+    ))}
+  </g>
+
+  <g class="nodes">
+    {nodes.map((n) => (
+      <g
+        class={`node layer-${n.layer}${n.layer === 'cross' ? ' bar' : ''}`}
+        data-id={n.id}
+        tabindex={interactive ? '0' : undefined}
+        role={interactive ? 'button' : undefined}
+        aria-pressed={interactive ? 'false' : undefined}
+        aria-label={`${n.label[lang]} · ${n.tool[lang]}`}
+      >
+        <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="10" class="node-bg" />
+        <rect
+          x={n.x}
+          y={n.y}
+          width={n.layer === 'cross' ? n.w : 5}
+          height={n.layer === 'cross' ? 4 : n.h}
+          rx={n.layer === 'cross' ? 2 : 3}
+          class="node-accent"
+        />
+        <foreignObject x={n.x} y={n.y} width={n.w} height={n.h}>
+          <div xmlns="http://www.w3.org/1999/xhtml" class="nd">
+            <span class="nd-label">{n.label[lang]}</span>
+            <span class="nd-tool">{n.tool[lang]}</span>
+            <span class="nd-badge" hidden></span>
+          </div>
+        </foreignObject>
+      </g>
+    ))}
+  </g>
+</svg>
+
+<style>
+  .diagram {
+    width: 100%;
+    height: auto;
+    font-family: var(--font);
+  }
+  .col-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    fill: var(--faint);
+  }
+
+  /* aristas */
+  .edge {
+    fill: none;
+    stroke: var(--border-strong);
+    stroke-width: 1.6;
+    transition: stroke 0.2s;
+  }
+  .arrow-head {
+    fill: var(--border-strong);
+  }
+  .edge-partial {
+    stroke: var(--blue);
+    stroke-dasharray: 6 4;
+    opacity: 0.55;
+  }
+  .edge-stale {
+    stroke: var(--faint);
+    stroke-dasharray: 3 5;
+  }
+  .edge-dirty {
+    stroke: var(--accent);
+    stroke-width: 2.2;
+  }
+
+  /* datos en movimiento */
+  .flow {
+    fill: var(--blue);
+    opacity: 0.9;
+  }
+  .flow.off {
+    display: none;
+  }
+  .flow.dirty {
+    fill: var(--accent);
+  }
+  .flow.partial {
+    opacity: 0.45;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .flows {
+      display: none;
+    }
+  }
+
+  /* nodos */
+  .node {
+    outline: none;
+  }
+  .diagram:not(.static) .node {
+    cursor: pointer;
+  }
+  .node-bg {
+    fill: var(--bg);
+    stroke: var(--border);
+    stroke-width: 1;
+    transition:
+      stroke 0.15s,
+      fill 0.15s;
+  }
+  .diagram:not(.static) .node:hover .node-bg,
+  .node:focus-visible .node-bg {
+    stroke: var(--text);
+  }
+  .node.is-selected .node-bg {
+    stroke: var(--accent);
+    stroke-width: 2;
+    fill: var(--surface);
+  }
+  .node.is-linked .node-bg {
+    stroke: var(--accent);
+    stroke-dasharray: 4 3;
+  }
+  .node-accent {
+    fill: var(--ink);
+  }
+  .layer-sources .node-accent {
+    fill: var(--ink);
+  }
+  .layer-ingest .node-accent {
+    fill: var(--blue);
+  }
+  .layer-storage .node-accent {
+    fill: var(--border-strong);
+  }
+  .layer-transform .node-accent {
+    fill: var(--green);
+  }
+  .layer-consume .node-accent {
+    fill: var(--accent);
+  }
+  .layer-cross .node-accent {
+    fill: var(--faint);
+  }
+  .layer-cross .node-bg {
+    fill: var(--bg-2);
+  }
+  .nd {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    padding: 6px 10px 6px 14px;
+    line-height: 1.2;
+    position: relative;
+  }
+  .bar .nd {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+  }
+  .nd-label {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .bar .nd-label {
+    white-space: nowrap;
+  }
+  .nd-tool {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bar .nd-tool {
+    margin-left: auto;
+  }
+  .nd-badge {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .bar .nd-badge {
+    position: static;
+  }
+
+  /* estados */
+  .node.is-removed .node-bg {
+    fill: transparent;
+    stroke: var(--faint);
+    stroke-dasharray: 5 4;
+  }
+  .node.is-removed .node-accent {
+    fill: var(--faint);
+    opacity: 0.4;
+  }
+  .node.is-removed .nd-label,
+  .node.is-removed .nd-tool {
+    color: var(--faint);
+    text-decoration: line-through;
+  }
+  .node.is-removed .nd-badge {
+    background: var(--faint);
+    color: var(--bg);
+  }
+  .node.is-stale .node-bg {
+    fill: var(--bg-2);
+    stroke-dasharray: 3 3;
+  }
+  .node.is-stale .nd-label {
+    color: var(--muted);
+  }
+  .node.is-stale .nd-badge {
+    background: var(--border-strong);
+    color: var(--text);
+  }
+  .node.is-partial .node-bg {
+    fill: var(--blue-soft);
+  }
+  .node.is-partial .nd-badge {
+    background: var(--blue);
+    color: #faf9f5;
+  }
+  .node.is-dirty .node-bg {
+    fill: var(--accent-soft);
+    stroke: var(--accent);
+  }
+  .node.is-dirty .nd-badge {
+    background: var(--accent);
+    color: #faf9f5;
+  }
+  .node.is-risk .node-bg {
+    stroke: var(--ink);
+    stroke-dasharray: 2 3;
+  }
+  .node.is-risk .nd-badge {
+    background: var(--ink);
+    color: #faf9f5;
+  }
+</style>

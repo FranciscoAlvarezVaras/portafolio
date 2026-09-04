@@ -1,0 +1,33 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHeader from './PageHeader.astro';
+import Pipeline from './Pipeline.astro';
+import { type Lang, useTranslations, routes, otherLang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const r = routes[lang];
+---
+
+<Base lang={lang} path={r.pipeline} altPath={routes[otherLang(lang)].pipeline} title={`${t('meta.pipeline')} · Francisco Álvarez Varas`} description={t('pipeline.intro')}>
+  <PageHeader kicker={t('pipeline.kicker')} title={t('pipeline.title')} intro={t('pipeline.intro')} />
+  <section class="section wide">
+    <div class="container">
+      <Pipeline lang={lang} />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .wide {
+    background: var(--bg-2);
+    border-top: 1px solid var(--border);
+    padding-top: 2rem;
+  }
+  .wide .container {
+    --max: 1280px;
+  }
+</style>

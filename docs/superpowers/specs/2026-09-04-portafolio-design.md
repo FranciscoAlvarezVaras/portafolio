@@ -16,7 +16,18 @@ Una web personal que, en cinco segundos, posicione a Francisco como **Analytics 
 | Stack | Astro 7, estático, sin framework de UI | Carga instantánea, SEO, i18n nativo, proyectos en Markdown. |
 | Cumberland | Enlace a producción, capturas y repo público | Repo verificado sin secretos ni base de datos en el historial. |
 
-## Estructura
+## Revisión del mismo día: sitio de varias páginas
+
+Tras ver la primera versión, Francisco pidió dos cambios que sustituyen la portada única:
+
+1. **Varias páginas** para que la visita sea más dinámica: inicio corto, "Cómo trabajo" con el diagrama completo, proyectos con filtros por tipo, máster, y "Sobre mí" con experiencia, stack, formación y contacto. Transiciones entre páginas con el ClientRouter de Astro y aparición progresiva de tarjetas al hacer scroll.
+2. **Hero cinematográfico**: fondo con trayectorias de datos animadas, pulsos, halos difuminados con deriva lenta, zoom tipo cámara, viñeta y grano de película; el texto entra por planos como una secuencia de títulos. Todo se desactiva con `prefers-reduced-motion`.
+
+El diagrama gana botones de escenario ("¿y si falla la orquestación?") y un recorrido guiado automático, y sus flechas llevan puntos de datos en movimiento que se apagan o cambian de color según el estado. La paleta pasó a la de Claude sobre fondo blanco, sin modo oscuro.
+
+La sección siguiente describe la portada única original y se conserva como historial.
+
+## Estructura (versión inicial, sustituida)
 
 **Portada** (`/es/` y `/en/`), en este orden:
 

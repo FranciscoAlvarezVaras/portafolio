@@ -25,6 +25,17 @@ npm run preview    # sirve dist/ para comprobarlo
 | Colores y tipografía | `src/styles/global.css` (variables al inicio) |
 | Dominio del sitio | `site` en `astro.config.mjs` y `Sitemap` en `public/robots.txt` |
 
+## Páginas
+
+| Español | English | Qué hay |
+|---|---|---|
+| `/es/` | `/en/` | Inicio: hero cinematográfico, anticipo del pipeline, tres proyectos, resumen del máster |
+| `/es/pipeline/` | `/en/pipeline/` | Diagrama interactivo con escenarios y recorrido guiado |
+| `/es/proyectos/` | `/en/projects/` | Todos los proyectos con filtro por tipo |
+| `/es/proyectos/<slug>/` | `/en/projects/<slug>/` | Ficha de cada proyecto |
+| `/es/master/` | `/en/masters/` | Hitos del máster y prácticas por módulo |
+| `/es/sobre-mi/` | `/en/about/` | Historia, experiencia, stack, formación y contacto |
+
 ## Estructura
 
 ```
@@ -32,12 +43,16 @@ src/
 ├── i18n/ui.ts            textos y rutas por idioma
 ├── data/                 perfil y modelo del diagrama
 ├── content/projects/     fichas de proyecto en Markdown (es/ y en/)
-├── layouts/Base.astro    <head>, cabecera y pie comunes
-├── components/           secciones de la portada y ficha de proyecto
+├── layouts/Base.astro    <head>, cabecera, pie y transiciones entre páginas
+├── components/
+│   ├── Hero.astro        portada cinematográfica
+│   ├── PipelineSvg.astro dibujo del pipeline (también como anticipo animado)
+│   ├── Pipeline.astro    interactividad: panel, escenarios, recorrido guiado
+│   ├── *Page.astro       composición de cada página
+│   └── ...               secciones reutilizables
 └── pages/
     ├── index.astro       redirige al idioma del navegador
-    ├── es/  en/          portada en cada idioma
-    └── es/proyectos/[slug].astro · en/projects/[slug].astro
+    └── es/ · en/         una carpeta por página, con [slug].astro para las fichas
 ```
 
 El diseño acordado está en `docs/superpowers/specs/2026-09-04-portafolio-design.md`.

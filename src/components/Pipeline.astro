@@ -1,6 +1,7 @@
 ---
-import { nodes, edges, canvas, layerNames, columnsX, type PipelineNode, type Layer } from '../data/pipeline';
+import { nodes, edges } from '../data/pipeline';
 import { type Lang, useTranslations, projectUrl } from '../i18n/ui';
+import PipelineSvg from './PipelineSvg.astro';
 
 interface Props {
   lang: Lang;
@@ -8,24 +9,7 @@ interface Props {
 const { lang } = Astro.props;
 const t = useTranslations(lang);
 
-const byId = new Map(nodes.map((n) => [n.id, n]));
-
-/** Curva entre columnas, o línea vertical si ambas piezas están en la misma columna. */
-function edgePath(a: PipelineNode, b: PipelineNode) {
-  if (Math.abs(a.x - b.x) < 1) {
-    return `M${a.x + a.w / 2},${a.y + a.h} L${b.x + b.w / 2},${b.y}`;
-  }
-  const x1 = a.x + a.w;
-  const y1 = a.y + a.h / 2;
-  const x2 = b.x;
-  const y2 = b.y + b.h / 2;
-  const mx = (x1 + x2) / 2;
-  return `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
-}
-
-/* Cabeceras de columna (las piezas transversales no llevan). */
-const columnLayers: Layer[] = ['sources', 'ingest', 'storage', 'transform', 'consume'];
-const columns = columnLayers.map((layer, i) => ({ layer, x: columnsX[i] }));
+const scenarios = ['orchestration', 'quality', 'silver', 'iac'] as const;
 
 /* Datos para el cliente: solo el idioma actual. */
 const clientData = {
@@ -53,68 +37,35 @@ const clientData = {
     removedCount: t('pipeline.removedCount'),
     healthy: t('pipeline.healthy'),
     hint: t('pipeline.hint'),
+    tour: t('pipeline.tour'),
+    tourStop: t('pipeline.tourStop'),
     status: {
       stale: t('pipeline.status.stale'),
       dirty: t('pipeline.status.dirty'),
       risk: t('pipeline.status.risk'),
       removed: t('pipeline.status.removed'),
-      partial: lang === 'es' ? 'incompleto' : 'incomplete',
+      partial: t('pipeline.status.partial'),
     },
   },
 };
 ---
 
 <div class="pipeline" data-pipeline>
+  <div class="scenarios" role="group" aria-label={t('pipeline.scenarios')}>
+    <span class="label">{t('pipeline.scenarios')}</span>
+    {scenarios.map((s) => (
+      <button type="button" class="chip-btn" data-scenario={s}>
+        {t(`pipeline.scenario.${s}` as const)}
+      </button>
+    ))}
+    <button type="button" class="chip-btn tour" data-tour>
+      <span class="play" aria-hidden="true">▶</span>
+      <span data-tour-label>{t('pipeline.tour')}</span>
+    </button>
+  </div>
+
   <div class="diagram-wrap">
-    <svg
-      class="diagram"
-      viewBox={`0 0 ${canvas.width} ${canvas.height}`}
-      role="group"
-      aria-label={t('pipeline.title')}
-    >
-      <defs>
-        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M0,0 L10,5 L0,10 z" class="arrow-head" />
-        </marker>
-      </defs>
-
-      {columns.map((c) => (
-        <text class="col-label" x={c.x} y={100}>
-          {layerNames[c.layer][lang]}
-        </text>
-      ))}
-
-      <g class="edges">
-        {edges.map((e) => {
-          const a = byId.get(e.from)!;
-          const b = byId.get(e.to)!;
-          return <path class="edge" d={edgePath(a, b)} data-from={e.from} data-to={e.to} marker-end="url(#arrow)" />;
-        })}
-      </g>
-
-      <g class="nodes">
-        {nodes.map((n) => (
-          <g
-            class={`node layer-${n.layer}${n.layer === 'cross' ? ' bar' : ''}`}
-            data-id={n.id}
-            tabindex="0"
-            role="button"
-            aria-pressed="false"
-            aria-label={`${n.label[lang]} · ${n.tool[lang]}`}
-          >
-            <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="10" class="node-bg" />
-            <rect x={n.x} y={n.y} width={n.layer === 'cross' ? n.w : 5} height={n.layer === 'cross' ? 4 : n.h} rx={n.layer === 'cross' ? 2 : 3} class="node-accent" />
-            <foreignObject x={n.x} y={n.y} width={n.w} height={n.h}>
-              <div xmlns="http://www.w3.org/1999/xhtml" class="nd">
-                <span class="nd-label">{n.label[lang]}</span>
-                <span class="nd-tool">{n.tool[lang]}</span>
-                <span class="nd-badge" hidden></span>
-              </div>
-            </foreignObject>
-          </g>
-        ))}
-      </g>
-    </svg>
+    <PipelineSvg lang={lang} interactive={true} idPrefix="full" label={t('pipeline.svgLabel')} />
   </div>
 
   <aside class="panel card" data-panel aria-live="polite">
@@ -126,7 +77,7 @@ const clientData = {
   <ul class="legend" aria-label="Leyenda">
     <li><span class="sw sw-removed"></span>{t('pipeline.legend.removed')}</li>
     <li><span class="sw sw-stale"></span>{t('pipeline.legend.stale')}</li>
-    <li><span class="sw sw-partial"></span>{lang === 'es' ? 'Datos incompletos' : 'Incomplete data'}</li>
+    <li><span class="sw sw-partial"></span>{t('pipeline.legend.partial')}</li>
     <li><span class="sw sw-dirty"></span>{t('pipeline.legend.dirty')}</li>
     <li><span class="sw sw-risk"></span>{t('pipeline.legend.risk')}</li>
   </ul>
@@ -157,7 +108,21 @@ const clientData = {
 
   const RANK: Record<Status, number> = { ok: 0, risk: 1, partial: 2, stale: 3, dirty: 4 };
   const EMIT: Record<Failure, Status> = { stops: 'stale', corrupts: 'dirty', partial: 'partial', latent: 'ok' };
-  const STATUSES: Status[] = ['risk', 'partial', 'stale', 'dirty'];
+  const TOUR_ORDER = [
+    'src_db', 'src_api', 'src_events', 'src_files',
+    'ing_batch', 'ing_stream', 'lake',
+    'silver', 'quality', 'gold',
+    'dashboard', 'ml', 'api',
+    'orchestration', 'governance', 'iac', 'monitoring',
+  ];
+
+  let tourTimer: number | null = null;
+  function stopTourTimer() {
+    if (tourTimer !== null) {
+      window.clearInterval(tourTimer);
+      tourTimer = null;
+    }
+  }
 
   function init(root: HTMLElement) {
     const data: Data = JSON.parse(root.querySelector('[data-pipeline-data]')!.textContent || '{}');
@@ -166,9 +131,13 @@ const clientData = {
     const nodeEls = new Map<string, SVGGElement>();
     root.querySelectorAll<SVGGElement>('.node').forEach((g) => nodeEls.set(g.dataset.id!, g));
     const edgeEls = Array.from(root.querySelectorAll<SVGPathElement>('.edge'));
+    const flowEls = Array.from(root.querySelectorAll<SVGCircleElement>('.flow'));
+    const tourBtn = root.querySelector<HTMLButtonElement>('[data-tour]');
+    const tourLabel = root.querySelector<HTMLElement>('[data-tour-label]');
 
     const removed = new Set<string>();
     let selected: string | null = null;
+    let touring = false;
 
     /* ---------- modelo ---------- */
     function compute(): Map<string, Status> {
@@ -177,14 +146,12 @@ const clientData = {
         if (removed.has(id)) return;
         if (RANK[s] > RANK[status.get(id)!]) status.set(id, s);
       };
-      // Piezas transversales quitadas: las que controlan reciben un estado base.
       for (const id of removed) {
         const n = byId.get(id)!;
         const s: Status = n.failure === 'latent' ? 'risk' : EMIT[n.failure];
         for (const c of n.controls) bump(c, s);
       }
       const emitted = (id: string): Status => (removed.has(id) ? EMIT[byId.get(id)!.failure] : status.get(id)!);
-      // Propagación por el flujo de datos hasta punto fijo (el grafo es acíclico).
       let changed = true;
       let guard = 0;
       while (changed && guard++ < 64) {
@@ -217,7 +184,6 @@ const clientData = {
 
     function render() {
       const status = compute();
-      // nodos
       for (const [id, g] of nodeEls) {
         const s = removed.has(id) ? 'removed' : status.get(id)!;
         g.classList.remove('is-removed', 'is-risk', 'is-partial', 'is-stale', 'is-dirty', 'is-selected', 'is-linked');
@@ -232,12 +198,20 @@ const clientData = {
         }
       }
       if (selected) for (const c of byId.get(selected)!.controls) nodeEls.get(c)?.classList.add('is-linked');
-      // aristas
+
+      const edgeStatus = (from: string): Status => (removed.has(from) ? EMIT[byId.get(from)!.failure] : status.get(from)!);
       for (const e of edgeEls) {
-        const from = e.dataset.from!;
-        const s: Status = removed.has(from) ? EMIT[byId.get(from)!.failure] : status.get(from)!;
+        const s = edgeStatus(e.dataset.from!);
         e.classList.remove('edge-partial', 'edge-stale', 'edge-dirty');
         if (s === 'partial' || s === 'stale' || s === 'dirty') e.classList.add(`edge-${s}`);
+      }
+      for (const f of flowEls) {
+        const s = edgeStatus(f.dataset.from!);
+        const toRemoved = removed.has(f.dataset.to!);
+        f.classList.remove('off', 'dirty', 'partial');
+        if (s === 'stale' || toRemoved) f.classList.add('off');
+        else if (s === 'dirty') f.classList.add('dirty');
+        else if (s === 'partial') f.classList.add('partial');
       }
       renderPanel(status);
     }
@@ -296,6 +270,7 @@ const clientData = {
 
       const action = h('button', { type: 'button', class: `btn btn-sm ${isRemoved ? 'btn-secondary' : 'btn-primary'}` }, isRemoved ? ui.restore : ui.remove);
       action.addEventListener('click', () => {
+        stopTour();
         if (removed.has(n.id)) removed.delete(n.id);
         else removed.add(n.id);
         render();
@@ -329,9 +304,34 @@ const clientData = {
       panel.append(ul);
     }
 
+    /* ---------- recorrido guiado ---------- */
+    function stopTour() {
+      if (!touring) return;
+      touring = false;
+      stopTourTimer();
+      root.classList.remove('touring');
+      if (tourLabel) tourLabel.textContent = data.ui.tour;
+    }
+    function startTour() {
+      stopTourTimer();
+      touring = true;
+      root.classList.add('touring');
+      if (tourLabel) tourLabel.textContent = data.ui.tourStop;
+      removed.clear();
+      let i = 0;
+      const step = () => {
+        selected = TOUR_ORDER[i % TOUR_ORDER.length];
+        i += 1;
+        render();
+      };
+      step();
+      tourTimer = window.setInterval(step, 3200);
+    }
+
     /* ---------- eventos ---------- */
     for (const [id, g] of nodeEls) {
       const pick = () => {
+        stopTour();
         selected = selected === id ? null : id;
         render();
       };
@@ -344,10 +344,32 @@ const clientData = {
       });
     }
 
+    root.querySelectorAll<HTMLButtonElement>('[data-scenario]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        stopTour();
+        const id = btn.dataset.scenario!;
+        removed.clear();
+        removed.add(id);
+        selected = id;
+        render();
+        if (window.innerWidth < 1180) panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      });
+    });
+
+    tourBtn?.addEventListener('click', () => (touring ? stopTour() : startTour()));
+
     render();
   }
 
-  document.querySelectorAll<HTMLElement>('[data-pipeline]').forEach(init);
+  function boot() {
+    document.querySelectorAll<HTMLElement>('[data-pipeline]:not([data-ready])').forEach((el) => {
+      el.dataset.ready = '1';
+      init(el);
+    });
+  }
+  document.addEventListener('astro:page-load', boot);
+  document.addEventListener('astro:before-swap', stopTourTimer);
+  boot();
 </script>
 
 <style>
@@ -357,6 +379,56 @@ const clientData = {
     gap: 1.25rem;
     align-items: start;
   }
+  .scenarios {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .scenarios .label {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-right: 0.25rem;
+  }
+  .chip-btn {
+    font: inherit;
+    font-size: 0.86rem;
+    font-weight: 500;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition:
+      border-color 0.15s,
+      background 0.15s,
+      transform 0.12s;
+  }
+  .chip-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent-text);
+    transform: translateY(-1px);
+  }
+  .tour {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    border-color: var(--accent);
+    color: var(--accent-text);
+  }
+  .play {
+    font-size: 0.65rem;
+  }
+  .touring .tour {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
   .diagram-wrap {
     overflow-x: auto;
     background: var(--surface);
@@ -365,196 +437,8 @@ const clientData = {
     padding: 0.5rem;
     box-shadow: var(--shadow);
   }
-  .diagram {
+  .diagram-wrap :global(.diagram) {
     min-width: 760px;
-    width: 100%;
-    height: auto;
-    font-family: var(--font);
-  }
-  .col-label {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    fill: var(--faint);
-  }
-
-  /* aristas */
-  .edge {
-    fill: none;
-    stroke: var(--border-strong);
-    stroke-width: 1.6;
-    transition: stroke 0.2s;
-  }
-  .arrow-head {
-    fill: var(--border-strong);
-  }
-  .edge-partial {
-    stroke: var(--blue);
-    stroke-dasharray: 6 4;
-    opacity: 0.55;
-  }
-  .edge-stale {
-    stroke: var(--faint);
-    stroke-dasharray: 3 5;
-  }
-  .edge-dirty {
-    stroke: var(--accent);
-    stroke-width: 2.2;
-  }
-
-  /* nodos */
-  .node {
-    cursor: pointer;
-    outline: none;
-  }
-  .node-bg {
-    fill: var(--bg);
-    stroke: var(--border);
-    stroke-width: 1;
-    transition:
-      stroke 0.15s,
-      fill 0.15s;
-  }
-  .node:hover .node-bg,
-  .node:focus-visible .node-bg {
-    stroke: var(--text);
-  }
-  .node.is-selected .node-bg {
-    stroke: var(--accent);
-    stroke-width: 2;
-    fill: var(--surface);
-  }
-  .node.is-linked .node-bg {
-    stroke: var(--accent);
-    stroke-dasharray: 4 3;
-  }
-  .node-accent {
-    fill: var(--ink);
-  }
-  .layer-sources .node-accent {
-    fill: var(--ink);
-  }
-  .layer-ingest .node-accent {
-    fill: var(--blue);
-  }
-  .layer-storage .node-accent {
-    fill: var(--border-strong);
-  }
-  .layer-transform .node-accent {
-    fill: var(--green);
-  }
-  .layer-consume .node-accent {
-    fill: var(--accent);
-  }
-  .layer-cross .node-accent {
-    fill: var(--faint);
-  }
-  .layer-cross .node-bg {
-    fill: var(--bg-2);
-  }
-  .nd {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 2px;
-    padding: 6px 10px 6px 14px;
-    line-height: 1.2;
-    position: relative;
-  }
-  .bar .nd {
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-    padding: 6px 12px;
-  }
-  .nd-label {
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--text);
-  }
-  .nd-tool {
-    font-family: var(--mono);
-    font-size: 10.5px;
-    color: var(--muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .bar .nd-label {
-    white-space: nowrap;
-  }
-  .bar .nd-tool {
-    margin-left: auto;
-  }
-  .nd-badge {
-    position: absolute;
-    top: 4px;
-    right: 6px;
-    font-family: var(--mono);
-    font-size: 9.5px;
-    padding: 1px 6px;
-    border-radius: 999px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  .bar .nd-badge {
-    position: static;
-  }
-
-  /* estados */
-  .node.is-removed .node-bg {
-    fill: transparent;
-    stroke: var(--faint);
-    stroke-dasharray: 5 4;
-  }
-  .node.is-removed .node-accent {
-    fill: var(--faint);
-    opacity: 0.4;
-  }
-  .node.is-removed .nd-label,
-  .node.is-removed .nd-tool {
-    color: var(--faint);
-    text-decoration: line-through;
-  }
-  .node.is-removed .nd-badge {
-    background: var(--faint);
-    color: var(--bg);
-  }
-  .node.is-stale .node-bg {
-    fill: var(--bg-2);
-    stroke-dasharray: 3 3;
-  }
-  .node.is-stale .nd-label {
-    color: var(--muted);
-  }
-  .node.is-stale .nd-badge {
-    background: var(--border-strong);
-    color: var(--text);
-  }
-  .node.is-partial .node-bg {
-    fill: var(--blue-soft);
-  }
-  .node.is-partial .nd-badge {
-    background: var(--blue);
-    color: #faf9f5;
-  }
-  .node.is-dirty .node-bg {
-    fill: var(--accent-soft);
-    stroke: var(--accent);
-  }
-  .node.is-dirty .nd-badge {
-    background: var(--accent);
-    color: #faf9f5;
-  }
-  .node.is-risk .node-bg {
-    stroke: var(--ink);
-    stroke-dasharray: 2 3;
-  }
-  .node.is-risk .nd-badge {
-    background: var(--ink);
-    color: #faf9f5;
   }
 
   /* panel */
@@ -652,7 +536,7 @@ const clientData = {
     cursor: pointer;
   }
   .panel :global(.affected li:hover) {
-    color: var(--accent);
+    color: var(--accent-text);
   }
   .panel :global(.status) {
     display: inline-block;
@@ -735,6 +619,11 @@ const clientData = {
     }
     .panel {
       position: static;
+    }
+  }
+  @media (max-width: 640px) {
+    .tour {
+      margin-left: 0;
     }
   }
 </style>

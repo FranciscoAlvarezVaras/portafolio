@@ -2,12 +2,8 @@
 import Base from '../layouts/Base.astro';
 import Hero from './Hero.astro';
 import Section from './Section.astro';
-import Pipeline from './Pipeline.astro';
+import PipelineSvg from './PipelineSvg.astro';
 import Projects from './Projects.astro';
-import Master from './Master.astro';
-import Experience from './Experience.astro';
-import Stack from './Stack.astro';
-import Education from './Education.astro';
 import Contact from './Contact.astro';
 import { type Lang, useTranslations, routes, otherLang } from '../i18n/ui';
 
@@ -16,28 +12,148 @@ interface Props {
 }
 const { lang } = Astro.props;
 const t = useTranslations(lang);
-const a = routes[lang].anchors;
+const r = routes[lang];
+const teaserId = lang === 'es' ? 'como-trabajo' : 'how-i-work';
 ---
 
-<Base lang={lang} path={routes[lang].home} altPath={routes[otherLang(lang)].home}>
+<Base lang={lang} path={r.home} altPath={routes[otherLang(lang)].home}>
   <Hero lang={lang} />
-  <Section id={a.pipeline} kicker={t('pipeline.kicker')} title={t('pipeline.title')} intro={t('pipeline.intro')} class="pipeline-section">
-    <Pipeline lang={lang} />
+
+  <section id={teaserId} class="section teaser">
+    <div class="container tgrid">
+      <div class="copy" data-reveal>
+        <p class="kicker">{t('home.pipeline.kicker')}</p>
+        <h2>{t('home.pipeline.title')}</h2>
+        <p class="lead">{t('home.pipeline.intro')}</p>
+        <a class="btn btn-primary" href={r.pipeline}>{t('home.pipeline.cta')} →</a>
+      </div>
+      <a class="preview card" href={r.pipeline} data-reveal style="--i: 1" aria-label={t('home.pipeline.cta')}>
+        <PipelineSvg lang={lang} interactive={false} idPrefix="teaser" label={t('pipeline.svgLabel')} />
+        <span class="badge">▶ {t('home.pipeline.badge')}</span>
+      </a>
+    </div>
+  </section>
+
+  <Section id={r.anchors.projects} kicker={t('projects.featured.kicker')} title={t('projects.featured.title')} intro={t('projects.intro')}>
+    <Projects lang={lang} limit={3} />
+    <p class="more"><a class="btn btn-secondary" href={r.projects}>{t('home.projects.cta')} →</a></p>
   </Section>
-  <Projects lang={lang} />
-  <Master lang={lang} />
-  <Experience lang={lang} />
-  <Stack lang={lang} />
-  <Education lang={lang} />
+
+  <section class="section master-strip">
+    <div class="container mgrid">
+      <div data-reveal>
+        <p class="kicker">{t('home.master.kicker')}</p>
+        <h2>{t('home.master.title')}</h2>
+        <p class="lead">{t('home.master.intro')}</p>
+        <a class="btn btn-secondary" href={r.master}>{t('home.master.cta')} →</a>
+      </div>
+      <ul class="stats">
+        <li data-reveal style="--i: 1"><strong>{t('home.master.s1.k')}</strong><span>{t('home.master.s1.v')}</span></li>
+        <li data-reveal style="--i: 2"><strong>{t('home.master.s2.k')}</strong><span>{t('home.master.s2.v')}</span></li>
+        <li data-reveal style="--i: 3"><strong>{t('home.master.s3.k')}</strong><span>{t('home.master.s3.v')}</span></li>
+      </ul>
+    </div>
+  </section>
+
   <Contact lang={lang} />
 </Base>
 
-<style is:global>
-  .pipeline-section {
+<style>
+  .teaser {
     background: var(--bg-2);
     border-top: 1px solid var(--border);
   }
-  .pipeline-section .container {
-    --max: 1280px;
+  .tgrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: clamp(1.5rem, 4vw, 3.5rem);
+    align-items: center;
+  }
+  .preview {
+    position: relative;
+    display: block;
+    padding: 0.75rem;
+    overflow: hidden;
+    transition:
+      transform 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+  .preview:hover {
+    transform: translateY(-3px) scale(1.01);
+    text-decoration: none;
+  }
+  .badge {
+    position: absolute;
+    right: 0.9rem;
+    bottom: 0.9rem;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: var(--accent-ink);
+    padding: 0.3rem 0.65rem;
+    border-radius: 999px;
+    box-shadow: var(--shadow);
+  }
+  .more {
+    margin: 1.75rem 0 0;
+  }
+  .master-strip {
+    background: var(--ink);
+    color: #faf9f5;
+    border-top: 0;
+  }
+  .master-strip .kicker {
+    color: var(--accent);
+  }
+  .master-strip .lead {
+    color: #cfcdc4;
+  }
+  .master-strip .btn-secondary {
+    background: transparent;
+    color: #faf9f5;
+    border-color: #4a4944;
+  }
+  .master-strip .btn-secondary:hover {
+    border-color: #faf9f5;
+  }
+  .mgrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: clamp(1.5rem, 4vw, 3.5rem);
+    align-items: center;
+  }
+  .stats {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.75rem;
+  }
+  .stats li {
+    display: grid;
+    grid-template-columns: 4.5rem 1fr;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.15rem;
+    border: 1px solid #33322e;
+    border-radius: var(--radius);
+    background: #1d1c1a;
+  }
+  .stats strong {
+    font-size: 2.2rem;
+    line-height: 1;
+    color: var(--accent);
+    font-family: var(--mono);
+  }
+  .stats span {
+    color: #cfcdc4;
+  }
+  @media (max-width: 900px) {
+    .tgrid,
+    .mgrid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

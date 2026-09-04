@@ -1,5 +1,5 @@
 ---
-import { type Lang, useTranslations } from '../i18n/ui';
+import { type Lang, useTranslations, routes } from '../i18n/ui';
 import { contact } from '../data/profile';
 
 interface Props {
@@ -7,19 +7,27 @@ interface Props {
 }
 const { lang } = Astro.props;
 const t = useTranslations(lang);
+const r = routes[lang];
 const year = new Date().getFullYear();
 ---
 
 <footer class="footer">
   <div class="container inner">
-    <p>
-      © {year} {t('footer.rights')} · {t('footer.built')}
-      <a href={contact.siteRepo} rel="noopener" target="_blank">GitHub</a>.
-    </p>
+    <nav class="pages" aria-label="Páginas">
+      <a href={r.home}>{t('nav.home')}</a>
+      <a href={r.pipeline}>{t('nav.pipeline')}</a>
+      <a href={r.projects}>{t('nav.projects')}</a>
+      <a href={r.master}>{t('nav.master')}</a>
+      <a href={r.about}>{t('nav.about')}</a>
+    </nav>
     <p class="links">
       <a href={`mailto:${contact.email}`}>{contact.email}</a>
       <a href={contact.linkedin} rel="noopener" target="_blank">LinkedIn</a>
       <a href={contact.github} rel="noopener" target="_blank">GitHub</a>
+    </p>
+    <p class="legal">
+      © {year} {t('footer.rights')} · {t('footer.built')}
+      <a href={contact.siteRepo} rel="noopener" target="_blank">GitHub</a>.
     </p>
   </div>
 </footer>
@@ -30,18 +38,27 @@ const year = new Date().getFullYear();
     padding: 2rem 0 2.5rem;
     color: var(--muted);
     font-size: 0.9rem;
+    background: var(--bg-2);
   }
   .inner {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 1rem;
+    display: grid;
+    gap: 0.9rem;
   }
   .inner p {
     margin: 0;
   }
+  .pages,
   .links {
     display: flex;
-    gap: 1.25rem;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+  }
+  .pages a {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .legal {
+    font-size: 0.85rem;
+    color: var(--faint);
   }
 </style>

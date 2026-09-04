@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { ClientRouter } from 'astro:transitions';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { type Lang, useTranslations, otherLang, routes } from '../i18n/ui';
@@ -51,6 +52,10 @@ const other = otherLang(lang);
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+    </script>
+    <ClientRouter />
     <script type="application/ld+json" set:html={JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'Person',
@@ -71,6 +76,33 @@ const other = otherLang(lang);
     <Footer lang={lang} />
   </body>
 </html>
+
+<script>
+  /* Aparición progresiva de los elementos marcados con data-reveal. */
+  function reveal() {
+    const els = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]:not(.in)'));
+    if (!els.length) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce || !('IntersectionObserver' in window)) {
+      els.forEach((el) => el.classList.add('in'));
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const en of entries) {
+          if (en.isIntersecting) {
+            en.target.classList.add('in');
+            io.unobserve(en.target);
+          }
+        }
+      },
+      { rootMargin: '0px 0px -8% 0px', threshold: 0.05 },
+    );
+    els.forEach((el) => io.observe(el));
+  }
+  document.addEventListener('astro:page-load', reveal);
+  reveal();
+</script>
 
 <style>
   .skip {
