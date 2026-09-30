@@ -5,30 +5,30 @@ import { type Lang, routes } from '../i18n/ui';
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const other = lang === 'es' ? 'en' : 'es';
-// Hermes Hub publicado con Tailscale Funnel; el propio Hub pide usuario, contraseña y código 2FA.
-const HUB = 'https://servidor-z890-aorus-master.tail45ff64.ts.net:8443/';
+// Zazu (Hermes Hub) publicado con Cloudflare Tunnel; pide usuario, contraseña y código 2FA.
+const HUB = 'https://holazazu.app/';
 const c = {
   es: {
     title: 'Asistente · Francisco Álvarez Varas',
-    desc: 'Acceso privado a Hermes, mi asistente personal.',
+    desc: 'Acceso privado a Zazu, mi asistente personal.',
     kicker: 'ACCESO PRIVADO',
     h1: 'Mi asistente personal',
-    lead: 'Hermes es un agente de IA que corre en mi propio servidor: organiza mi agenda y mis tareas, resume el correo y WhatsApp y me escribe cuando algo requiere atención.',
+    lead: 'Zazu es un agente de IA que corre en mi propio servidor: organiza mi agenda y mis tareas, resume el correo y WhatsApp y me escribe cuando algo requiere atención.',
     cta: 'Entrar al asistente',
     note: 'Entrada con usuario, contraseña y código de verificación. Solo para mí.',
     how: 'Cómo está hecho',
-    items: ['Agente Hermes en un servidor Linux propio', 'App web React con Google Calendar, Tasks y Gmail', 'Acceso seguro con Tailscale y verificación en dos pasos'],
+    items: ['Agente Hermes Agent en un servidor Linux propio', 'App web React con Google Calendar, Tasks y Gmail', 'Acceso seguro con Cloudflare y verificación en dos pasos'],
   },
   en: {
     title: 'Assistant · Francisco Álvarez Varas',
-    desc: 'Private access to Hermes, my personal assistant.',
+    desc: 'Private access to Zazu, my personal assistant.',
     kicker: 'PRIVATE ACCESS',
     h1: 'My personal assistant',
-    lead: 'Hermes is an AI agent running on my own server: it organises my calendar and tasks, summarises email and WhatsApp and pings me when something needs attention.',
+    lead: 'Zazu is an AI agent running on my own server: it organises my calendar and tasks, summarises email and WhatsApp and pings me when something needs attention.',
     cta: 'Open the assistant',
     note: 'Sign-in with username, password and a verification code. Just for me.',
     how: 'How it is built',
-    items: ['Hermes agent on my own Linux server', 'React web app with Google Calendar, Tasks and Gmail', 'Secure access via Tailscale and two-step verification'],
+    items: ['Hermes Agent on my own Linux server', 'React web app with Google Calendar, Tasks and Gmail', 'Secure access via Cloudflare and two-step verification'],
   },
 }[lang];
 ---
