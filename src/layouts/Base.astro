@@ -66,6 +66,7 @@ const other = otherLang(lang);
       sameAs: ['https://www.linkedin.com/in/frankalvarezv/', 'https://github.com/FranciscoAlvarezVaras'],
       knowsAbout: ['SQL', 'dbt', 'BigQuery', 'Python', 'Google Cloud', 'Looker Studio', 'Terraform'],
     })} />
+    <slot name="head" />
   </head>
   <body>
     <a class="skip" href="#main">{lang === 'es' ? 'Saltar al contenido' : 'Skip to content'}</a>

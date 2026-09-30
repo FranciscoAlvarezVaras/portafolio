@@ -14,6 +14,7 @@ export const routes = {
     projects: '/es/proyectos/',
     master: '/es/master/',
     about: '/es/sobre-mi/',
+    assistant: '/es/asistente/',
     contact: '/es/sobre-mi/#contacto',
     anchors: {
       pipeline: 'pipeline',
@@ -31,6 +32,7 @@ export const routes = {
     projects: '/en/projects/',
     master: '/en/masters/',
     about: '/en/about/',
+    assistant: '/en/assistant/',
     contact: '/en/about/#contact',
     anchors: {
       pipeline: 'pipeline',
@@ -70,6 +72,7 @@ export const ui = {
     'nav.master': 'Máster',
     'nav.about': 'Sobre mí',
     'nav.contact': 'Hablemos',
+    'nav.assistant': 'Asistente',
     'nav.lang': 'English',
     'nav.langShort': 'EN',
     'nav.menu': 'Menú',
@@ -233,6 +236,7 @@ export const ui = {
     'nav.master': "Master's",
     'nav.about': 'About',
     'nav.contact': "Let's talk",
+    'nav.assistant': 'Assistant',
     'nav.lang': 'Español',
     'nav.langShort': 'ES',
     'nav.menu': 'Menu',

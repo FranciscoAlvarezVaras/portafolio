@@ -1,0 +1,64 @@
+---
+import Base from '../layouts/Base.astro';
+import { type Lang, routes } from '../i18n/ui';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const other = lang === 'es' ? 'en' : 'es';
+// Hermes Hub publicado con Tailscale Funnel; el propio Hub pide usuario, contraseña y código 2FA.
+const HUB = 'https://servidor-z890-aorus-master.tail45ff64.ts.net:8443/';
+const c = {
+  es: {
+    title: 'Asistente · Francisco Álvarez Varas',
+    desc: 'Acceso privado a Hermes, mi asistente personal.',
+    kicker: 'ACCESO PRIVADO',
+    h1: 'Mi asistente personal',
+    lead: 'Hermes es un agente de IA que corre en mi propio servidor: organiza mi agenda y mis tareas, resume el correo y WhatsApp y me escribe cuando algo requiere atención.',
+    cta: 'Entrar al asistente',
+    note: 'Entrada con usuario, contraseña y código de verificación. Solo para mí.',
+    how: 'Cómo está hecho',
+    items: ['Agente Hermes en un servidor Linux propio', 'App web React con Google Calendar, Tasks y Gmail', 'Acceso seguro con Tailscale y verificación en dos pasos'],
+  },
+  en: {
+    title: 'Assistant · Francisco Álvarez Varas',
+    desc: 'Private access to Hermes, my personal assistant.',
+    kicker: 'PRIVATE ACCESS',
+    h1: 'My personal assistant',
+    lead: 'Hermes is an AI agent running on my own server: it organises my calendar and tasks, summarises email and WhatsApp and pings me when something needs attention.',
+    cta: 'Open the assistant',
+    note: 'Sign-in with username, password and a verification code. Just for me.',
+    how: 'How it is built',
+    items: ['Hermes agent on my own Linux server', 'React web app with Google Calendar, Tasks and Gmail', 'Secure access via Tailscale and two-step verification'],
+  },
+}[lang];
+---
+
+<Base lang={lang} title={c.title} description={c.desc} path={routes[lang].assistant} altPath={routes[other].assistant}>
+  <meta slot="head" name="robots" content="noindex, nofollow" />
+  <section class="container wrap">
+    <p class="kicker">{c.kicker}</p>
+    <h1>{c.h1}<span class="dot">.</span></h1>
+    <p class="lead">{c.lead}</p>
+    <a class="enter" href={HUB} rel="noopener">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+      {c.cta}
+    </a>
+    <p class="note">{c.note}</p>
+    <h2>{c.how}</h2>
+    <ul>{c.items.map((i) => <li>{i}</li>)}</ul>
+  </section>
+</Base>
+
+<style>
+  .wrap { max-width: 720px; padding-top: 4rem; padding-bottom: 5rem; }
+  .kicker { font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.12em; color: var(--green); margin: 0 0 0.75rem; }
+  h1 { font-size: clamp(2rem, 5vw, 3rem); letter-spacing: -0.03em; line-height: 1.1; margin: 0 0 1rem; }
+  .dot { color: var(--green); }
+  .lead { font-size: 1.1rem; color: var(--muted); margin: 0 0 2rem; }
+  .enter { display: inline-flex; align-items: center; gap: 0.6rem; background: var(--ink); color: var(--accent-ink); border-radius: 999px; padding: 0.85rem 1.4rem; font-weight: 600; min-height: 48px; }
+  .enter:hover { background: #2b2b29; text-decoration: none; }
+  .note { font-size: 0.9rem; color: var(--muted); margin: 0.9rem 0 3rem; }
+  h2 { font-size: 1.1rem; margin: 0 0 0.75rem; }
+  ul { margin: 0; padding-left: 1.2rem; color: var(--muted); }
+  li { margin: 0.35rem 0; }
+</style>

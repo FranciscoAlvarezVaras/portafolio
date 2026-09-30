@@ -19,7 +19,8 @@ export default defineConfig({
     sitemap({
       i18n: { defaultLocale: 'es', locales: { es: 'es-ES', en: 'en-GB' } },
       // Fuera la 404 y la raíz (solo redirige por idioma y lleva noindex).
-      filter: (page) => !page.endsWith('/404/') && page !== 'https://www.franciscoalvarez.dev/',
+      filter: (page) =>
+        !page.endsWith('/404/') && page !== 'https://www.franciscoalvarez.dev/' && !/\/(asistente|assistant)\/$/.test(page),
     }),
   ],
 });

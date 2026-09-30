@@ -40,6 +40,10 @@ const isActive = (it: { href: string; exact?: boolean }) => (it.exact ? path ===
           {it.label}
         </a>
       ))}
+      <a class="assistant" href={r.assistant} aria-current={path.startsWith(r.assistant) ? 'page' : undefined}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+        {t('nav.assistant')}
+      </a>
       <a class="talk" href={r.contact}>{t('nav.contact')}</a>
       <a class="lang" href={altPath} hreflang={lang === 'es' ? 'en' : 'es'} lang={lang === 'es' ? 'en' : 'es'} title={t('nav.lang')}>
         <span aria-hidden="true">{t('nav.langShort')}</span>
@@ -140,6 +144,15 @@ const isActive = (it: { href: string; exact?: boolean }) => (it.exact ? path ===
     height: 2px;
     background: var(--accent);
     border-radius: 2px;
+  }
+  .assistant {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--green) !important;
+  }
+  .assistant:hover {
+    background: var(--green-soft) !important;
   }
   .talk {
     margin-left: 0.5rem;
