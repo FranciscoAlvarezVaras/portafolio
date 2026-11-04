@@ -11,7 +11,6 @@ image: /img/projects/cumberland-cover.jpg
 imageAlt: Hoteles Cumberland
 links:
   live: https://hotel-web-rosy-one.vercel.app
-  repo: https://github.com/FranciscoAlvarezVaras/hotel-web
 featured: true
 order: 6
 ---
