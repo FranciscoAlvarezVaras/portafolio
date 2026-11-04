@@ -56,9 +56,9 @@ export function otherLang(lang: Lang): Lang {
 
 export const ui = {
   es: {
-    'meta.title': 'Francisco Álvarez Varas · Analytics Engineer',
+    'meta.title': 'Francisco Álvarez Varas · Data Engineer',
     'meta.description':
-      'Analytics Engineer y Data Analyst en Valencia. Modelado de datos con SQL y dbt, pipelines en Google Cloud y dashboards que la gente de negocio usa de verdad.',
+      'Data Engineer en Valencia. Pipelines batch y streaming en Google Cloud, modelado por capas en BigQuery con Dataform y dbt, e infraestructura como código con Terraform.',
     'meta.pipeline': 'Cómo trabajo · pipeline end-to-end interactivo',
     'meta.projects': 'Proyectos · casos de analítica e ingeniería de datos',
     'meta.master': 'Máster Big Data & Cloud · EDEM 2025-2026',
@@ -74,19 +74,19 @@ export const ui = {
     'nav.langShort': 'EN',
     'nav.menu': 'Menú',
 
-    'hero.kicker': 'Analytics Engineer · Data Analyst',
+    'hero.kicker': 'Data Engineer · Google Cloud',
     'hero.name': 'Francisco Álvarez Varas',
     'hero.pitch':
-      'Convierto datos dispersos en modelos, métricas y dashboards que la gente de negocio usa de verdad. Tres años de analítica con Python y SQL, y un máster en Big Data & Cloud construyendo pipelines en Google Cloud.',
+      'Construyo pipelines de datos en Google Cloud: ingesta batch y streaming, modelado por capas en BigQuery e infraestructura como código con Terraform. Vengo de tres años en marketing digital y SEO, donde analizaba datos de negocio con BigQuery y Looker Studio.',
     'hero.location': 'Valencia · remoto',
     'hero.status': 'Disponible para incorporación',
     'hero.cta.projects': 'Ver proyectos',
     'hero.cta.cv': 'Descargar CV',
     'hero.cta.linkedin': 'LinkedIn',
-    'hero.fact1.k': '3+ años',
-    'hero.fact1.v': 'en analítica de datos y negocio',
-    'hero.fact2.k': '7 proyectos',
-    'hero.fact2.v': 'end-to-end, de la fuente al dashboard',
+    'hero.fact1.k': '3 años',
+    'hero.fact1.v': 'en marketing digital y SEO antes de los datos',
+    'hero.fact2.k': '6 proyectos',
+    'hero.fact2.v': 'con código: pipelines, analítica y un encargo en producción',
     'hero.fact3.k': 'GCP · BigQuery · dbt',
     'hero.fact3.v': 'stack principal, con Terraform y CI/CD',
 
@@ -96,7 +96,7 @@ export const ui = {
       'De las fuentes al dashboard, con calidad, orquestación e infraestructura como código. En la versión interactiva puedes quitar cualquier pieza y ver qué se rompe aguas abajo.',
     'home.pipeline.cta': 'Explorar el pipeline interactivo',
     'home.pipeline.badge': 'Interactivo',
-    'home.projects.cta': 'Ver los 7 proyectos',
+    'home.projects.cta': 'Ver los 6 proyectos',
     'home.master.kicker': 'Máster Big Data & Cloud · EDEM',
     'home.master.title': 'Un año construyendo, de Docker a Vertex AI',
     'home.master.intro': 'Tres Data Projects en equipo, un hackathon, un TFM con empresa real y prácticas en cada módulo.',
@@ -191,10 +191,10 @@ export const ui = {
     'about.kicker': 'Sobre mí',
     'about.title': 'De optimizar páginas a medir el negocio',
     'about.intro':
-      'Empecé en SEO técnico pensando que mi trabajo era hacer que Google entendiera mis páginas. Acabé escribiendo pipelines en Python para extraer datos de la API de Search Console, modelando experimentos y publicando dashboards. Esa transición, de optimizar páginas a diseñar la infraestructura que las mide, es lo que me llevó al máster en Big Data & Cloud. Antes de los datos hubo ocho años de marketing, investigación de mercados y auditoría, y de ahí viene el criterio de negocio que aplico a cada modelo.',
+      'Empecé en SEO técnico pensando que mi trabajo era hacer que Google entendiera mis páginas. En el día a día analizaba datos de marketing con BigQuery y Looker Studio, y lo que más me interesaba era la infraestructura que había detrás de esos datos. Eso es lo que me llevó al máster en Big Data & Cloud. Antes de los datos hubo ocho años de marketing, investigación de mercados y auditoría, y de ahí viene el criterio de negocio que aplico a cada modelo.',
 
     'experience.kicker': 'Experiencia',
-    'experience.title': 'Puestos de datos',
+    'experience.title': 'Experiencia reciente',
     'experience.before': 'Antes de los datos',
     'experience.before.intro':
       'Ocho años en marketing, investigación de mercados y administración en manufactura, hotelería, consumo masivo y servicios financieros. De ahí viene el criterio de negocio que aplico a los datos.',
@@ -209,7 +209,7 @@ export const ui = {
     'contact.kicker': 'Contacto',
     'contact.title': '¿Hablamos?',
     'contact.intro':
-      'Busco un puesto de Analytics Engineer o Data Analyst en Valencia o en remoto. Escríbeme y te respondo el mismo día.',
+      'Busco un puesto de Data Engineer en Valencia o en remoto. Escríbeme y te respondo el mismo día.',
     'contact.email': 'Escribir un email',
     'contact.cv': 'Descargar CV (PDF)',
 
@@ -219,9 +219,9 @@ export const ui = {
     'cv.file': '/cv/Francisco_Alvarez_Varas_CV_ES.pdf',
   },
   en: {
-    'meta.title': 'Francisco Álvarez Varas · Analytics Engineer',
+    'meta.title': 'Francisco Álvarez Varas · Data Engineer',
     'meta.description':
-      'Analytics Engineer and Data Analyst based in Valencia, Spain. Data modelling with SQL and dbt, pipelines on Google Cloud and dashboards business people actually use.',
+      'Data Engineer based in Valencia, Spain. Batch and streaming pipelines on Google Cloud, layered modelling in BigQuery with Dataform and dbt, and infrastructure as code with Terraform.',
     'meta.pipeline': 'How I work · interactive end-to-end pipeline',
     'meta.projects': 'Projects · analytics and data engineering case studies',
     'meta.master': "Master's in Big Data & Cloud · EDEM 2025-2026",
@@ -237,19 +237,19 @@ export const ui = {
     'nav.langShort': 'ES',
     'nav.menu': 'Menu',
 
-    'hero.kicker': 'Analytics Engineer · Data Analyst',
+    'hero.kicker': 'Data Engineer · Google Cloud',
     'hero.name': 'Francisco Álvarez Varas',
     'hero.pitch':
-      "I turn scattered data into models, metrics and dashboards that business people actually use. Three years of analytics with Python and SQL, plus a Big Data & Cloud master's building pipelines on Google Cloud.",
+      'I build data pipelines on Google Cloud: batch and streaming ingestion, layered modelling in BigQuery and infrastructure as code with Terraform. Before that, three years in digital marketing and SEO, analysing business data with BigQuery and Looker Studio.',
     'hero.location': 'Valencia, Spain · remote',
     'hero.status': 'Open to work',
     'hero.cta.projects': 'See projects',
     'hero.cta.cv': 'Download CV',
     'hero.cta.linkedin': 'LinkedIn',
-    'hero.fact1.k': '3+ years',
-    'hero.fact1.v': 'in data and business analytics',
-    'hero.fact2.k': '7 projects',
-    'hero.fact2.v': 'end-to-end, from source to dashboard',
+    'hero.fact1.k': '3 years',
+    'hero.fact1.v': 'in digital marketing and SEO before data',
+    'hero.fact2.k': '6 projects',
+    'hero.fact2.v': 'with code: pipelines, analytics and a client build in production',
     'hero.fact3.k': 'GCP · BigQuery · dbt',
     'hero.fact3.v': 'core stack, with Terraform and CI/CD',
 
@@ -259,7 +259,7 @@ export const ui = {
       'From sources to dashboard, with data quality, orchestration and infrastructure as code. In the interactive version you can remove any piece and watch what breaks downstream.',
     'home.pipeline.cta': 'Explore the interactive pipeline',
     'home.pipeline.badge': 'Interactive',
-    'home.projects.cta': 'See all 7 projects',
+    'home.projects.cta': 'See all 6 projects',
     'home.master.kicker': "Master's in Big Data & Cloud · EDEM",
     'home.master.title': 'A year of building, from Docker to Vertex AI',
     'home.master.intro': 'Three team Data Projects, a hackathon, a thesis with a real company and hands-on practice in every module.',
@@ -354,10 +354,10 @@ export const ui = {
     'about.kicker': 'About',
     'about.title': 'From optimising pages to measuring the business',
     'about.intro':
-      "I started in technical SEO thinking my job was to make Google understand my pages. I ended up writing Python pipelines to pull data from the Search Console API, modelling experiments and publishing dashboards. That shift, from optimising pages to designing the infrastructure that measures them, is what took me to the master's in Big Data & Cloud. Before data there were eight years of marketing, market research and auditing, and that is where the business judgement I bring to every model comes from.",
+      "I started in technical SEO thinking my job was to make Google understand my pages. Day to day I analysed marketing data with BigQuery and Looker Studio, and what interested me most was the infrastructure behind that data. That is what took me to the master's in Big Data & Cloud. Before data there were eight years of marketing, market research and auditing, and that is where the business judgement I bring to every model comes from.",
 
     'experience.kicker': 'Experience',
-    'experience.title': 'Data roles',
+    'experience.title': 'Recent experience',
     'experience.before': 'Before data',
     'experience.before.intro':
       'Eight years in marketing, market research and administration across manufacturing, hospitality, consumer goods and financial services. That is where the business judgement I bring to data comes from.',
@@ -372,7 +372,7 @@ export const ui = {
     'contact.kicker': 'Contact',
     'contact.title': "Let's talk",
     'contact.intro':
-      "I'm looking for an Analytics Engineer or Data Analyst role in Valencia or remote. Drop me a line and I'll reply the same day.",
+      "I'm looking for a Data Engineer role in Valencia or remote. Drop me a line and I'll reply the same day.",
     'contact.email': 'Send an email',
     'contact.cv': 'Download CV (PDF)',
 

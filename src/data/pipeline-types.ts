@@ -96,7 +96,6 @@ export const ev = {
   cloudrisk: mk('cloudrisk', { es: 'CloudRISK', en: 'CloudRISK' }),
   prices: mk('monitor-precios', { es: 'Monitor de precios', en: 'Price monitor' }),
   air: mk('calidad-aire-valencia', { es: 'Calidad del aire', en: 'Air quality' }),
-  seo: mk('analitica-seo', { es: 'Analítica SEO', en: 'SEO analytics' }),
   hub: mk('edem-student-hub', { es: 'EDEM Student Hub', en: 'EDEM Student Hub' }),
   hotel: mk('hoteles-cumberland', { es: 'Hoteles Cumberland', en: 'Hoteles Cumberland' }),
 };

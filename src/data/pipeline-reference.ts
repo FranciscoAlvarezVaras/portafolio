@@ -41,7 +41,7 @@ const nodes: PipelineNode[] = [
     id: 'src_api',
     layer: 'sources',
     label: { es: 'APIs externas', en: 'External APIs' },
-    tool: { es: 'Eurostat · Search Console · OpenWeather', en: 'Eurostat · Search Console · OpenWeather' },
+    tool: { es: 'Eurostat · Adzuna · OpenWeather', en: 'Eurostat · Adzuna · OpenWeather' },
     tools: ['REST', 'Python requests', 'Cuotas y reintentos'],
     desc: {
       es: 'Contexto que la empresa no genera: mercado laboral, tráfico de búsqueda, clima. Cada API tiene su cuota, su formato y su manera de fallar, así que se envuelven en un cliente con reintentos y se guardan tal cual llegan antes de tocarlas.',
@@ -54,7 +54,6 @@ const nodes: PipelineNode[] = [
     failure: 'partial',
     evidence: [
       ev.tfm({ es: 'Ingesta de Eurostat y Adzuna para comparar salarios de mercado', en: 'Eurostat and Adzuna ingestion to benchmark market salaries' }),
-      ev.seo({ es: 'API de Google Search Console para medir experimentos', en: 'Google Search Console API to measure experiments' }),
       ev.cloudrisk({ es: 'OpenWeather y calidad del aire cada 30 segundos', en: 'OpenWeather and air quality every 30 seconds' }),
     ],
     x: C[0], y: 200, w: W, h: H,
@@ -255,7 +254,6 @@ const nodes: PipelineNode[] = [
     evidence: [
       ev.tfm({ es: 'Centro de mando de retención en Looker Studio', en: 'Retention command centre in Looker Studio' }),
       ev.prices({ es: 'Dashboard en Plotly Dash con top 100 y comparación entre tiendas', en: 'Plotly Dash dashboard with top 100 and store comparison' }),
-      ev.seo({ es: 'Dashboards de KPIs y reporting automatizado para dirección', en: 'KPI dashboards and automated reporting for management' }),
     ],
     x: C[4], y: 110, w: W, h: H,
   },

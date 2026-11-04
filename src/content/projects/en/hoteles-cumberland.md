@@ -2,9 +2,9 @@
 title: Website and booking engine for Hoteles Cumberland
 summary: Replace the website of a four-hotel chain with an in-house platform with bookings, an admin panel, a guest CRM and automated emails.
 result: In production since August 2026. An in-house booking engine, a hardened admin panel and an automated test suite.
-role: Solo end-to-end project, from proposal to deployment, including an editing manual so the client can maintain the site without coding.
+role: Solo end-to-end freelance commission, from proposal to deployment, including an editing manual so the client can maintain the site without coding.
 period: Jul – Sep 2026
-team: Solo · real client
+team: Freelance commission · real client
 category: product
 stack: [Next.js 16, TypeScript, Tailwind CSS 4, Prisma 7, PostgreSQL, Supabase, Resend, Vercel, Vitest, Zod]
 image: /img/projects/cumberland-cover.jpg

@@ -41,7 +41,7 @@ const nodes: PipelineNode[] = [
     id: 'g_saas',
     layer: 'sources',
     label: { es: 'SaaS y APIs', en: 'SaaS and APIs' },
-    tool: { es: 'Salesforce · Search Console · Eurostat', en: 'Salesforce · Search Console · Eurostat' },
+    tool: { es: 'Salesforce · Adzuna · Eurostat', en: 'Salesforce · Adzuna · Eurostat' },
     tools: ['REST', 'OAuth', 'Cuotas', 'Paginación'],
     desc: {
       es: 'Datos de terceros con API: CRM, analítica web, estadísticas públicas, ofertas de empleo. Cada una con su cuota, su paginación y su manera de cambiar el formato sin avisar.',
@@ -54,7 +54,6 @@ const nodes: PipelineNode[] = [
     failure: 'partial',
     evidence: [
       ev.tfm({ es: 'Eurostat y Adzuna para comparar salarios de mercado', en: 'Eurostat and Adzuna to benchmark market salaries' }),
-      ev.seo({ es: 'API de Search Console descargada a diario', en: 'Search Console API pulled daily' }),
     ],
     x: C[0], y: 208, w: W, h: H,
   },
@@ -137,7 +136,6 @@ const nodes: PipelineNode[] = [
     failure: 'stops',
     evidence: [
       ev.tfm({ es: 'Cargas de Eurostat y Adzuna con cliente propio', en: 'Eurostat and Adzuna loads with a custom client' }),
-      ev.seo({ es: 'Scripts diarios contra la API de Search Console', en: 'Daily scripts against the Search Console API' }),
     ],
     x: C[1], y: 208, w: W, h: H,
   },
@@ -404,7 +402,7 @@ const nodes: PipelineNode[] = [
       en: 'The pipeline works and nobody knows. Decisions go back to gut feeling and the last spreadsheet in the inbox.',
     },
     failure: 'stops',
-    evidence: [ev.tfm({ es: 'Centro de mando de retención', en: 'Retention command centre' }), ev.seo({ es: 'Dashboards de KPIs para dirección', en: 'KPI dashboards for management' })],
+    evidence: [ev.tfm({ es: 'Centro de mando de retención', en: 'Retention command centre' })],
     x: C[5], y: 163, w: W, h: H,
   },
   {

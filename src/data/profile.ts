@@ -23,66 +23,72 @@ export interface Job {
 
 export const jobs: Job[] = [
   {
-    company: 'Freelance',
-    role: { es: 'Consultor de datos, marketing y administración', en: 'Data, marketing and operations consultant' },
-    period: { es: 'Mar 2025 – Sep 2025', en: 'Mar 2025 – Sep 2025' },
+    company: 'Hoteles Cumberland · freelance',
+    role: { es: 'Desarrollador web freelance', en: 'Freelance web developer' },
+    period: { es: 'Jul 2026 – Sep 2026', en: 'Jul 2026 – Sep 2026' },
     bullets: {
       es: [
-        'Asesoría a pequeñas empresas en analítica de datos y estrategia digital.',
-        'Diseño de procesos internos y seguimiento de resultados con cuadros de mando.',
+        'Web y motor de reservas para una cadena de cuatro hoteles, de la propuesta al despliegue. En producción desde agosto de 2026.',
+        'Panel de administración, CRM de huéspedes, correos automáticos y suite de tests.',
       ],
       en: [
-        'Advised small businesses on data analytics and digital strategy.',
-        'Designed internal processes and tracked results with dashboards.',
+        'Website and booking engine for a four-hotel chain, from proposal to deployment. In production since August 2026.',
+        'Admin panel, guest CRM, automated emails and a test suite.',
       ],
     },
-    tags: ['Analítica', 'Procesos', 'Dashboards'],
+    tags: ['Next.js', 'TypeScript', 'PostgreSQL'],
   },
   {
-    company: 'GrowBarato',
-    role: { es: 'Analista de datos · SEO & CRO', en: 'Data Analyst · SEO & CRO' },
-    period: { es: 'Abr 2023 – Oct 2024', en: 'Apr 2023 – Oct 2024' },
+    company: 'Elite Sports 17 S.L.',
+    role: { es: 'Marketing Specialist', en: 'Marketing Specialist' },
+    period: { es: 'May 2024 – Ago 2025', en: 'May 2024 – Aug 2025' },
+    bullets: {
+      es: ['Análisis de datos de marketing con BigQuery y Looker Studio.'],
+      en: ['Marketing data analysis with BigQuery and Looker Studio.'],
+    },
+    tags: ['BigQuery', 'Looker Studio'],
+  },
+  {
+    company: 'Grow Barato',
+    role: { es: 'SEO Specialist · CRO Specialist', en: 'SEO Specialist · CRO Specialist' },
+    period: { es: 'Abr 2023 – May 2024', en: 'Apr 2023 – May 2024' },
     bullets: {
       es: [
-        'Análisis de datos de e-commerce con Python y la API de Google Search Console.',
-        'Diseño de tests A/B y mejoras que subieron el tráfico orgánico un 14,3 %.',
-        'Automatización de informes y dashboards de KPIs para dirección.',
+        'Posicionamiento orgánico (SEO) y optimización de la conversión (CRO) del e-commerce.',
+        'Análisis de datos con BigQuery y Looker Studio.',
       ],
       en: [
-        'E-commerce data analysis with Python and the Google Search Console API.',
-        'Designed A/B tests and improvements that grew organic traffic by 14.3%.',
-        'Automated reporting and built KPI dashboards for management.',
+        'Organic search (SEO) and conversion rate optimisation (CRO) for the e-commerce site.',
+        'Data analysis with BigQuery and Looker Studio.',
       ],
     },
-    tags: ['Python', 'Search Console API', 'A/B testing', 'KPIs'],
+    tags: ['SEO', 'CRO', 'BigQuery', 'Looker Studio'],
   },
   {
     company: 'RANKTOP',
-    role: { es: 'Analista de datos · SEO/SEM', en: 'Data Analyst · SEO/SEM' },
+    role: { es: 'SEO/SEM Marketing Assistant', en: 'SEO/SEM Marketing Assistant' },
     period: { es: 'Jun 2022 – Dic 2022', en: 'Jun 2022 – Dec 2022' },
     bullets: {
       es: [
-        'Informes de rendimiento con Google Analytics, Search Console y SEMrush para cinco cuentas.',
-        'Optimización on-page y análisis de métricas de posicionamiento.',
+        'Auditorías SEO y estrategias de contenido adaptadas a cada cliente.',
+        'Gestión de campañas SEM y análisis de métricas de rendimiento (ROI, CPC, CTR).',
       ],
       en: [
-        'Performance reporting with Google Analytics, Search Console and SEMrush for five accounts.',
-        'On-page optimisation and ranking metrics analysis.',
+        'SEO audits and content strategies tailored to each client.',
+        'SEM campaign management and performance metrics analysis (ROI, CPC, CTR).',
       ],
     },
-    tags: ['Google Analytics', 'SEMrush', 'Reporting'],
+    tags: ['SEO', 'SEM', 'ROI · CPC · CTR'],
   },
   {
     company: 'Neurocatching',
-    role: { es: 'Investigación de consumidor · Neuromarketing', en: 'Consumer research · Neuromarketing' },
+    role: { es: 'Prácticas en neuromarketing', en: 'Neuromarketing internship' },
     period: { es: 'Feb 2022 – Jul 2022', en: 'Feb 2022 – Jul 2022' },
     bullets: {
-      es: [
-        'Análisis biométrico con eye-tracking y facial coding para traducir comportamiento en decisiones de SEO y UX.',
-      ],
-      en: ['Biometric analysis with eye-tracking and facial coding, translated into SEO and UX decisions.'],
+      es: ['Apoyo al análisis CRO con datos de eye-tracking y facial coding para optimizar las ventas de clientes.'],
+      en: ['Supported CRO analysis using eye-tracking and facial coding data to improve client sales.'],
     },
-    tags: ['Eye-tracking', 'UX research'],
+    tags: ['Eye-tracking', 'CRO'],
   },
 ];
 

@@ -2,9 +2,9 @@
 title: Web y motor de reservas de Hoteles Cumberland
 summary: Sustituir la web de una cadena de cuatro hoteles por una plataforma propia con reservas, panel de administración, CRM de huéspedes y correos automáticos.
 result: En producción desde agosto de 2026. Motor de reservas propio, panel de administración con seguridad reforzada y suite de tests automatizados.
-role: Proyecto completo en solitario, de la propuesta al despliegue, incluido el manual de edición para que el cliente mantenga el sitio sin programar.
+role: Encargo freelance completo en solitario, de la propuesta al despliegue, incluido el manual de edición para que el cliente mantenga el sitio sin programar.
 period: Jul – Sep 2026
-team: En solitario · cliente real
+team: Encargo freelance · cliente real
 category: product
 stack: [Next.js 16, TypeScript, Tailwind CSS 4, Prisma 7, PostgreSQL, Supabase, Resend, Vercel, Vitest, Zod]
 image: /img/projects/cumberland-cover.jpg
